@@ -1,0 +1,57 @@
+import { Mail, Phone, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+
+export const Footer = () => {
+  return (
+    <footer className="bg-secondary text-secondary-foreground py-12">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          {/* About */}
+          <div>
+            <h3 className="text-xl font-bold mb-4 text-primary-foreground">Club Finder</h3>
+            <p className="text-secondary-foreground/80 mb-4">
+              Helping golfers of all skill levels find their perfect clubs through advanced playability factor analysis.
+            </p>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h3 className="text-xl font-bold mb-4 text-primary-foreground">Contact Us</h3>
+            <div className="space-y-3">
+              <a href="mailto:info@clubfinder.com" className="flex items-center gap-2 text-secondary-foreground/80 hover:text-primary-foreground transition-colors">
+                <Mail className="h-4 w-4" />
+                info@clubfinder.com
+              </a>
+              <a href="tel:+1234567890" className="flex items-center gap-2 text-secondary-foreground/80 hover:text-primary-foreground transition-colors">
+                <Phone className="h-4 w-4" />
+                (123) 456-7890
+              </a>
+            </div>
+          </div>
+
+          {/* Social */}
+          <div>
+            <h3 className="text-xl font-bold mb-4 text-primary-foreground">Follow Us</h3>
+            <div className="flex gap-4">
+              <a href="#" className="w-10 h-10 bg-primary/20 hover:bg-primary rounded-full flex items-center justify-center transition-colors" aria-label="Facebook">
+                <Facebook className="h-5 w-5" />
+              </a>
+              <a href="#" className="w-10 h-10 bg-primary/20 hover:bg-primary rounded-full flex items-center justify-center transition-colors" aria-label="Twitter">
+                <Twitter className="h-5 w-5" />
+              </a>
+              <a href="#" className="w-10 h-10 bg-primary/20 hover:bg-primary rounded-full flex items-center justify-center transition-colors" aria-label="Instagram">
+                <Instagram className="h-5 w-5" />
+              </a>
+              <a href="#" className="w-10 h-10 bg-primary/20 hover:bg-primary rounded-full flex items-center justify-center transition-colors" aria-label="LinkedIn">
+                <Linkedin className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-secondary-foreground/20 pt-8 text-center text-secondary-foreground/60">
+          <p>&copy; {new Date().getFullYear()} Club Finder. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  );
+};
