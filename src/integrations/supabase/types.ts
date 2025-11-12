@@ -14,7 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      saved_calculations: {
+        Row: {
+          avg_distance: number
+          category: string
+          created_at: string
+          handicap: number
+          id: string
+          play_style: string
+          playability_factor: number
+          swing_speed: number
+          user_id: string
+        }
+        Insert: {
+          avg_distance: number
+          category: string
+          created_at?: string
+          handicap: number
+          id?: string
+          play_style: string
+          playability_factor: number
+          swing_speed: number
+          user_id: string
+        }
+        Update: {
+          avg_distance?: number
+          category?: string
+          created_at?: string
+          handicap?: number
+          id?: string
+          play_style?: string
+          playability_factor?: number
+          swing_speed?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_calculations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
