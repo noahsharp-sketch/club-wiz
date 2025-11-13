@@ -1,7 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, TrendingUp, Download } from "lucide-react";
 import { PlayabilityResult, PlayerData } from "./ClubFinderForm";
+import { exportToPDF } from "@/lib/pdfExport";
+import { useToast } from "@/hooks/use-toast";
 
 interface ResultsProps {
   playerData: PlayerData;
@@ -9,6 +12,24 @@ interface ResultsProps {
 }
 
 export const Results = ({ playerData, result }: ResultsProps) => {
+  const { toast } = useToast();
+
+  const handleExportPDF = () => {
+    try {
+      exportToPDF(playerData, result);
+      toast({
+        title: "PDF Downloaded!",
+        description: "Your golf playability report has been downloaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "There was an error generating your PDF report.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <section className="py-20 bg-gradient-to-b from-muted to-background">
       <div className="container mx-auto px-4">
@@ -20,6 +41,14 @@ export const Results = ({ playerData, result }: ResultsProps) => {
             <p className="text-xl text-muted-foreground">
               Based on your unique playing profile
             </p>
+            <Button 
+              onClick={handleExportPDF}
+              className="mt-6"
+              size="lg"
+            >
+              <Download className="mr-2 h-5 w-5" />
+              Export as PDF
+            </Button>
           </div>
 
           {/* Playability Factor Score */}
