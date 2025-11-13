@@ -1,22 +1,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, TrendingUp, Download } from "lucide-react";
+import { CheckCircle2, TrendingUp, Download, Settings } from "lucide-react";
 import { PlayabilityResult, PlayerData } from "./ClubFinderForm";
+import { ClubPreferences } from "./ClubPreferencesForm";
 import { exportToPDF } from "@/lib/pdfExport";
 import { useToast } from "@/hooks/use-toast";
 
 interface ResultsProps {
   playerData: PlayerData;
   result: PlayabilityResult;
+  preferences: ClubPreferences | null;
+  onShowPreferences: () => void;
 }
 
-export const Results = ({ playerData, result }: ResultsProps) => {
+export const Results = ({ playerData, result, preferences, onShowPreferences }: ResultsProps) => {
   const { toast } = useToast();
 
   const handleExportPDF = () => {
     try {
-      exportToPDF(playerData, result);
+      exportToPDF(playerData, result, preferences);
       toast({
         title: "PDF Downloaded!",
         description: "Your golf playability report has been downloaded successfully.",
@@ -41,14 +44,25 @@ export const Results = ({ playerData, result }: ResultsProps) => {
             <p className="text-xl text-muted-foreground">
               Based on your unique playing profile
             </p>
-            <Button 
-              onClick={handleExportPDF}
-              className="mt-6"
-              size="lg"
-            >
-              <Download className="mr-2 h-5 w-5" />
-              Export as PDF
-            </Button>
+            <div className="flex gap-4 justify-center mt-6">
+              <Button 
+                onClick={handleExportPDF}
+                size="lg"
+              >
+                <Download className="mr-2 h-5 w-5" />
+                Export as PDF
+              </Button>
+              {!preferences && (
+                <Button 
+                  onClick={onShowPreferences}
+                  variant="outline"
+                  size="lg"
+                >
+                  <Settings className="mr-2 h-5 w-5" />
+                  Add Preferences
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Playability Factor Score */}
@@ -123,6 +137,49 @@ export const Results = ({ playerData, result }: ResultsProps) => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Preferences Card */}
+          {preferences && (
+            <Card className="mt-8 shadow-card-golf border-primary/20">
+              <CardHeader>
+                <CardTitle className="text-2xl text-foreground flex items-center">
+                  <Settings className="mr-2 h-6 w-6 text-primary" />
+                  Your Club Preferences
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground font-medium">Condition</p>
+                    <p className="text-foreground font-semibold capitalize">{preferences.clubCondition.replace('-', ' ')}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground font-medium">Grip Style</p>
+                    <p className="text-foreground font-semibold capitalize">{preferences.gripPreference.replace('-', ' ')}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground font-medium">Appearance</p>
+                    <p className="text-foreground font-semibold capitalize">{preferences.lookPreference.replace('-', ' ')}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground font-medium">Budget</p>
+                    <p className="text-foreground font-semibold capitalize">{preferences.budgetRange.replace('-', ' ')}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground font-medium">Brand</p>
+                    <p className="text-foreground font-semibold capitalize">{preferences.brandPreference}</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={onShowPreferences}
+                  variant="outline"
+                  className="mt-6 w-full"
+                >
+                  Update Preferences
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </section>

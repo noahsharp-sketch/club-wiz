@@ -1,8 +1,13 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { PlayerData, PlayabilityResult } from '@/components/ClubFinderForm';
+import { ClubPreferences } from '@/components/ClubPreferencesForm';
 
-export const exportToPDF = (playerData: PlayerData, result: PlayabilityResult) => {
+export const exportToPDF = (
+  playerData: PlayerData, 
+  result: PlayabilityResult, 
+  preferences: ClubPreferences | null
+) => {
   const doc = new jsPDF();
   
   // Add title
@@ -86,6 +91,30 @@ export const exportToPDF = (playerData: PlayerData, result: PlayabilityResult) =
     headStyles: { fillColor: [34, 139, 34] },
     margin: { left: 14, right: 14 },
   });
+  
+  // Add preferences section if available
+  if (preferences) {
+    const preferencesY = (doc as any).lastAutoTable.finalY || 200;
+    
+    doc.setFontSize(16);
+    doc.setTextColor(0);
+    doc.text('Your Club Preferences', 14, preferencesY + 15);
+    
+    autoTable(doc, {
+      startY: preferencesY + 20,
+      head: [['Preference', 'Selection']],
+      body: [
+        ['Condition', preferences.clubCondition.replace('-', ' ').charAt(0).toUpperCase() + preferences.clubCondition.replace('-', ' ').slice(1)],
+        ['Grip Style', preferences.gripPreference.replace('-', ' ').charAt(0).toUpperCase() + preferences.gripPreference.replace('-', ' ').slice(1)],
+        ['Appearance', preferences.lookPreference.replace('-', ' ').charAt(0).toUpperCase() + preferences.lookPreference.replace('-', ' ').slice(1)],
+        ['Budget Range', preferences.budgetRange.replace('-', ' ').charAt(0).toUpperCase() + preferences.budgetRange.replace('-', ' ').slice(1)],
+        ['Brand Preference', preferences.brandPreference.charAt(0).toUpperCase() + preferences.brandPreference.slice(1)],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [34, 139, 34] },
+      margin: { left: 14, right: 14 },
+    });
+  }
   
   // Add footer
   const pageCount = doc.internal.pages.length - 1;
