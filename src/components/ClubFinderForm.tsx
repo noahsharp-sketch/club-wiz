@@ -273,8 +273,6 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                       onChange={(e) => setPlayerHeight(e.target.value)}
                       className="border-input"
                       required
-                      min="48"
-                      max="84"
                     />
                   </div>
 
@@ -324,7 +322,6 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                       <SelectContent>
                         <SelectItem value="male">Male</SelectItem>
                         <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
