@@ -41,36 +41,84 @@ export type Database = {
       saved_calculations: {
         Row: {
           avg_distance: number
+          ball_flight_tendency: string | null
+          brand_preference: string | null
+          budget_range: string | null
           category: string
+          club_condition: string | null
+          club_length_adjustment: string | null
           created_at: string
+          gender: string | null
+          grip_preference: string | null
+          grip_sizes: string | null
+          hand_size: string | null
+          handgrip_issues: string | null
           handicap: number
           id: string
+          lie_angle_adjustment: string | null
+          look_preference: string | null
           play_style: string
           playability_factor: number
+          player_height: number | null
+          shaft_preference: string | null
           swing_speed: number
+          swing_weight_adjustment: string | null
           user_id: string
+          wrist_to_floor: number | null
         }
         Insert: {
           avg_distance: number
+          ball_flight_tendency?: string | null
+          brand_preference?: string | null
+          budget_range?: string | null
           category: string
+          club_condition?: string | null
+          club_length_adjustment?: string | null
           created_at?: string
+          gender?: string | null
+          grip_preference?: string | null
+          grip_sizes?: string | null
+          hand_size?: string | null
+          handgrip_issues?: string | null
           handicap: number
           id?: string
+          lie_angle_adjustment?: string | null
+          look_preference?: string | null
           play_style: string
           playability_factor: number
+          player_height?: number | null
+          shaft_preference?: string | null
           swing_speed: number
+          swing_weight_adjustment?: string | null
           user_id: string
+          wrist_to_floor?: number | null
         }
         Update: {
           avg_distance?: number
+          ball_flight_tendency?: string | null
+          brand_preference?: string | null
+          budget_range?: string | null
           category?: string
+          club_condition?: string | null
+          club_length_adjustment?: string | null
           created_at?: string
+          gender?: string | null
+          grip_preference?: string | null
+          grip_sizes?: string | null
+          hand_size?: string | null
+          handgrip_issues?: string | null
           handicap?: number
           id?: string
+          lie_angle_adjustment?: string | null
+          look_preference?: string | null
           play_style?: string
           playability_factor?: number
+          player_height?: number | null
+          shaft_preference?: string | null
           swing_speed?: number
+          swing_weight_adjustment?: string | null
           user_id?: string
+          wrist_to_floor?: number | null
         }
         Relationships: [
           {
@@ -82,15 +130,77 @@ export type Database = {
           },
         ]
       }
+      user_feedback: {
+        Row: {
+          calculation_id: string | null
+          created_at: string
+          feedback_text: string | null
+          id: string
+          rating: number
+          user_id: string | null
+        }
+        Insert: {
+          calculation_id?: string | null
+          created_at?: string
+          feedback_text?: string | null
+          id?: string
+          rating: number
+          user_id?: string | null
+        }
+        Update: {
+          calculation_id?: string | null
+          created_at?: string
+          feedback_text?: string | null
+          id?: string
+          rating?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_feedback_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "saved_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -217,6 +327,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

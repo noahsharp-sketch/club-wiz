@@ -6,6 +6,8 @@ import { ClubPreferencesForm, ClubPreferences } from "@/components/ClubPreferenc
 import { Results } from "@/components/Results";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { FeedbackForm } from "@/components/FeedbackForm";
+import { EmailDeliveryForm } from "@/components/EmailDeliveryForm";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 const Index = () => {
   const [showResults, setShowResults] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const [playerData, setPlayerData] = useState<PlayerData | null>(null);
   const [result, setResult] = useState<PlayabilityResult | null>(null);
   const [preferences, setPreferences] = useState<ClubPreferences | null>(null);
@@ -20,6 +24,8 @@ const Index = () => {
   const calculatorRef = useRef<HTMLDivElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const preferencesRef = useRef<HTMLDivElement>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  const emailRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -43,7 +49,18 @@ const Index = () => {
           avg_distance: data.avgDistance,
           play_style: data.playStyle,
           playability_factor: calculatedResult.factor,
-          category: calculatedResult.category
+          category: calculatedResult.category,
+          player_height: data.playerHeight,
+          wrist_to_floor: data.wristToFloor,
+          hand_size: data.handSize,
+          gender: data.gender,
+          handgrip_issues: data.handgripIssues,
+          ball_flight_tendency: data.ballFlightTendency,
+          club_length_adjustment: data.clubLengthAdjustment,
+          lie_angle_adjustment: data.lieAngleAdjustment,
+          shaft_preference: data.shaftPreference,
+          swing_weight_adjustment: data.swingWeightAdjustment,
+          grip_sizes: data.gripSizes,
         })
         .select()
         .single();
@@ -101,6 +118,29 @@ const Index = () => {
     }, 100);
   };
 
+  const handleShowFeedback = () => {
+    setShowFeedback(true);
+    setTimeout(() => {
+      feedbackRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
+  const handleFeedbackComplete = () => {
+    setShowFeedback(false);
+    setShowEmailForm(true);
+    setTimeout(() => {
+      emailRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
+  const handleEmailComplete = () => {
+    setShowEmailForm(false);
+    toast({
+      title: "All Done!",
+      description: "Thank you for using our golf club finder!",
+    });
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -117,12 +157,33 @@ const Index = () => {
               result={result} 
               preferences={preferences}
               onShowPreferences={handleShowPreferences}
+              onShowFeedback={handleShowFeedback}
             />
           </div>
         )}
         {showPreferences && (
           <div ref={preferencesRef}>
             <ClubPreferencesForm onSubmit={handlePreferencesSubmit} />
+          </div>
+        )}
+        {showFeedback && (
+          <div ref={feedbackRef}>
+            <FeedbackForm
+              calculationId={savedCalculationId}
+              userId={user?.id || null}
+              onComplete={handleFeedbackComplete}
+            />
+          </div>
+        )}
+        {showEmailForm && playerData && result && (
+          <div ref={emailRef}>
+            <EmailDeliveryForm
+              playerData={playerData}
+              result={result}
+              preferences={preferences}
+              userEmail={user?.email}
+              onComplete={handleEmailComplete}
+            />
           </div>
         )}
         <Footer />
