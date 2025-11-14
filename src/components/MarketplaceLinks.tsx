@@ -8,12 +8,10 @@ interface MarketplaceLinksProps {
 }
 
 export const MarketplaceLinks = ({ result }: MarketplaceLinksProps) => {
-  // Generate UTM parameters based on playability data
   const getUTMParams = (source: string) => {
     return `utm_source=clubfinder&utm_medium=referral&utm_campaign=${result.category.toLowerCase().replace(/\s+/g, '-')}`;
   };
 
-  // Get the first two recommendations for marketplace filtering
   const primaryRecs = result.recommendations.slice(0, 2);
   const searchQuery = encodeURIComponent(primaryRecs.join(" OR "));
 
@@ -59,17 +57,22 @@ export const MarketplaceLinks = ({ result }: MarketplaceLinksProps) => {
                 variant="outline"
                 className="w-full h-auto p-6 flex flex-col items-start gap-2 hover:bg-primary/5 hover:border-primary transition-all"
               >
-                <a href={link.url} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col w-full h-full"
+                >
                   <div className="flex items-center justify-between w-full">
                     <span className="font-semibold text-foreground">{link.title}</span>
                     <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
                       {link.badge}
                     </span>
                   </div>
-                  <span className="text-sm text-muted-foreground text-left">
+                  <p className="text-sm text-muted-foreground text-left break-words whitespace-normal mt-1">
                     {link.description}
-                  </span>
-                  <ExternalLink className="h-4 w-4 text-primary ml-auto" />
+                  </p>
+                  <ExternalLink className="h-4 w-4 text-primary ml-auto mt-2" />
                 </a>
               </Button>
             </div>
