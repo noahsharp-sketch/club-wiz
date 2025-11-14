@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, TrendingUp, Download, Settings } from "lucide-react";
+import { CheckCircle2, TrendingUp, Download, Settings, MessageSquare } from "lucide-react";
 import { PlayabilityResult, PlayerData } from "./ClubFinderForm";
 import { ClubPreferences } from "./ClubPreferencesForm";
+import { MarketplaceLinks } from "./MarketplaceLinks";
 import { exportToPDF } from "@/lib/pdfExport";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,9 +13,10 @@ interface ResultsProps {
   result: PlayabilityResult;
   preferences: ClubPreferences | null;
   onShowPreferences: () => void;
+  onShowFeedback: () => void;
 }
 
-export const Results = ({ playerData, result, preferences, onShowPreferences }: ResultsProps) => {
+export const Results = ({ playerData, result, preferences, onShowPreferences, onShowFeedback }: ResultsProps) => {
   const { toast } = useToast();
 
   const handleExportPDF = () => {
@@ -62,6 +64,14 @@ export const Results = ({ playerData, result, preferences, onShowPreferences }: 
                   Add Preferences
                 </Button>
               )}
+              <Button 
+                onClick={onShowFeedback}
+                variant="outline"
+                size="lg"
+              >
+                <MessageSquare className="mr-2 h-5 w-5" />
+                Give Feedback
+              </Button>
             </div>
           </div>
 
@@ -180,6 +190,11 @@ export const Results = ({ playerData, result, preferences, onShowPreferences }: 
               </CardContent>
             </Card>
           )}
+
+          {/* Marketplace Links */}
+          <div className="mt-8">
+            <MarketplaceLinks result={result} />
+          </div>
         </div>
       </div>
     </section>
