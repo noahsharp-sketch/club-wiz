@@ -15,10 +15,19 @@ export const Header = () => {
     }
   };
 
+  const handleLogoClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-primary">Club Finder</h1>
+        <h1 
+          className="text-2xl font-bold text-primary cursor-pointer hover:opacity-80 transition-opacity" 
+          onClick={handleLogoClick}
+        >
+          Club Finder
+        </h1>
         
         <div className="flex items-center gap-4">
           {user && (
