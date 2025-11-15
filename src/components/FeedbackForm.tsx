@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,17 +10,15 @@ import { useToast } from "@/hooks/use-toast";
 import emailjs from "@emailjs/browser";
 
 interface FeedbackFormProps {
-  calculationId: string | null;
-  userId: string | null;
-  onComplete: () => void;
+  onComplete?: () => void;
 }
 
-export const FeedbackForm = ({ calculationId, userId, onComplete }: FeedbackFormProps) => {
+export const FeedbackForm = ({ onComplete }: FeedbackFormProps) => {
   const [rating, setRating] = useState<number>(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
-  const [feedbackText, setFeedbackText] = useState("");
-  const [userName, setUserName] = useState(""); // optional name
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [name, setName] = useState<string>("");
+  const [feedbackText, setFeedbackText] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,49 +37,50 @@ export const FeedbackForm = ({ calculationId, userId, onComplete }: FeedbackForm
 
     try {
       await emailjs.send(
-        "service_9h83hig",
-        "template_88vezno",
+        "service_9h83hig", // your service ID
+        "template_88vezno", // your template ID
         {
-          user_name: userName || "Anonymous",
-          rating,
-          feedback_text: feedbackText || "No additional feedback",
-          calculation_id: calculationId || "N/A",
-          user_id: userId || "N/A",
-          to_email: "Club-wizFinder@outlook.com",
+          to_email: "Club-wizFinder@outlook.com", // your receiving email
+          from_name: name || "Anonymous",
+          rating: rating.toString(),
+          feedback: feedbackText || "No additional feedback",
         },
-        "cPjYPfJ7KtCFh9yUB"
+        "cPjYPfJ7KtCFh9yUB" // your public key
       );
 
       toast({
         title: "Thank You!",
-        description: "Your feedback has been submitted successfully.",
+        description: "Your feedback has been sent successfully.",
       });
 
-      onComplete();
+      setRating(0);
+      setHoveredRating(0);
+      setName("");
+      setFeedbackText("");
+
+      if (onComplete) onComplete();
     } catch (error) {
+      console.error(error);
       toast({
         title: "Submission Failed",
         description: "There was an error sending your feedback. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
+
+    setIsSubmitting(false);
   };
 
   return (
     <Card className="shadow-card-golf">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl text-foreground">
-          How was your experience?
-        </CardTitle>
+        <CardTitle className="text-2xl text-foreground">How was your experience?</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Rating */}
           <div className="space-y-4">
-            <Label className="text-center block text-foreground font-medium">
-              Rate your experience
-            </Label>
+            <Label className="text-center block text-foreground font-medium">Rate your experience</Label>
             <div className="flex justify-center gap-2">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
@@ -92,9 +93,7 @@ export const FeedbackForm = ({ calculationId, userId, onComplete }: FeedbackForm
                 >
                   <Star
                     className={`h-10 w-10 ${
-                      value <= (hoveredRating || rating)
-                        ? "fill-primary text-primary"
-                        : "text-muted-foreground"
+                      value <= (hoveredRating || rating) ? "fill-primary text-primary" : "text-muted-foreground"
                     }`}
                   />
                 </button>
@@ -102,19 +101,22 @@ export const FeedbackForm = ({ calculationId, userId, onComplete }: FeedbackForm
             </div>
           </div>
 
+          {/* Optional Name */}
           <div className="space-y-2">
-            <Label htmlFor="userName" className="text-foreground font-medium">
+            <Label htmlFor="name" className="text-foreground font-medium">
               Name (optional)
             </Label>
             <input
-              id="userName"
-              placeholder="Your name (optional)"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              className="w-full border-input rounded-md px-3 py-2"
+              id="name"
+              type="text"
+              placeholder="Your name (or leave blank)"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="border-input w-full rounded-md px-3 py-2"
             />
           </div>
 
+          {/* Optional Feedback */}
           <div className="space-y-2">
             <Label htmlFor="feedback" className="text-foreground font-medium">
               Additional feedback (optional)
@@ -128,12 +130,7 @@ export const FeedbackForm = ({ calculationId, userId, onComplete }: FeedbackForm
             />
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            size="lg"
-            disabled={isSubmitting}
-          >
+          <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
             {isSubmitting ? "Submitting..." : "Submit Feedback"}
           </Button>
         </form>
