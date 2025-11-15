@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import emailjs from "@emailjs/browser";
 
 interface FeedbackFormProps {
   calculationId: string | null;
@@ -16,11 +17,11 @@ export const FeedbackForm = ({ calculationId, userId, onComplete }: FeedbackForm
   const [rating, setRating] = useState<number>(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
   const [feedbackText, setFeedbackText] = useState("");
-  const [name, setName] = useState(""); // Optional name
+  const [userName, setUserName] = useState(""); // optional name
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (rating === 0) {
@@ -34,27 +35,36 @@ export const FeedbackForm = ({ calculationId, userId, onComplete }: FeedbackForm
 
     setIsSubmitting(true);
 
-    const senderName = name.trim() || "Anonymous";
-    const subject = encodeURIComponent("Club Finder Feedback");
-    const body = encodeURIComponent(
-      `Name: ${senderName}\nRating: ${rating}\nCalculation ID: ${calculationId || "N/A"}\nUser ID: ${userId || "N/A"}\nFeedback: ${feedbackText || "No additional feedback"}`
-    );
+    try {
+      await emailjs.send(
+        "service_9h83hig",
+        "template_88vezno",
+        {
+          user_name: userName || "Anonymous",
+          rating,
+          feedback_text: feedbackText || "No additional feedback",
+          calculation_id: calculationId || "N/A",
+          user_id: userId || "N/A",
+          to_email: "Club-wizFinder@outlook.com",
+        },
+        "cPjYPfJ7KtCFh9yUB"
+      );
 
-    // Open default email client with pre-filled email
-    window.location.href = `mailto:Club-wizFinder@outlook.com?subject=${subject}&body=${body}`;
+      toast({
+        title: "Thank You!",
+        description: "Your feedback has been submitted successfully.",
+      });
 
-    setIsSubmitting(false);
-
-    toast({
-      title: "Feedback Prepared",
-      description: "Your feedback is ready to be sent via your email client.",
-    });
-
-    setRating(0);
-    setHoveredRating(0);
-    setFeedbackText("");
-    setName("");
-    onComplete();
+      onComplete();
+    } catch (error) {
+      toast({
+        title: "Submission Failed",
+        description: "There was an error sending your feedback. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -92,18 +102,16 @@ export const FeedbackForm = ({ calculationId, userId, onComplete }: FeedbackForm
             </div>
           </div>
 
-          {/* Optional Name Field */}
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-foreground font-medium">
-              Your Name (optional)
+            <Label htmlFor="userName" className="text-foreground font-medium">
+              Name (optional)
             </Label>
             <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Anonymous if left blank"
-              className="w-full p-2 border rounded"
+              id="userName"
+              placeholder="Your name (optional)"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              className="w-full border-input rounded-md px-3 py-2"
             />
           </div>
 
@@ -126,7 +134,7 @@ export const FeedbackForm = ({ calculationId, userId, onComplete }: FeedbackForm
             size="lg"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Preparing..." : "Submit Feedback"}
+            {isSubmitting ? "Submitting..." : "Submit Feedback"}
           </Button>
         </form>
       </CardContent>
