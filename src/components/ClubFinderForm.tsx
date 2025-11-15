@@ -59,74 +59,101 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
   const [userEmail, setUserEmail] = useState("");
 
   const calculatePlayability = (): PlayabilityResult => {
-    let factor = 0;
+    // MPF-based calculation: Lower MPF = more forgiving, Higher MPF = less forgiving
+    // We'll calculate recommended MPF range based on player characteristics
+    let mpfScore = 1000; // Start at tour level (highest MPF)
     const speed = parseFloat(swingSpeed || "0");
     const hcp = parseFloat(handicap || "0");
     const dist = parseFloat(avgDistance || "0");
 
-    if (speed < 85) factor += 35;
-    else if (speed < 95) factor += 25;
-    else if (speed < 105) factor += 15;
-    else factor += 5;
+    // Swing speed adjustments (lower speed needs lower MPF/more forgiveness)
+    if (speed < 85) mpfScore -= 500; // Ultra game improvement needed
+    else if (speed < 95) mpfScore -= 350;
+    else if (speed < 105) mpfScore -= 200;
+    else mpfScore -= 50;
 
-    if (hcp >= 20) factor += 35;
-    else if (hcp >= 15) factor += 25;
-    else if (hcp >= 10) factor += 15;
-    else if (hcp >= 5) factor += 10;
-    else factor += 5;
+    // Handicap adjustments
+    if (hcp >= 20) mpfScore -= 450;
+    else if (hcp >= 15) mpfScore -= 350;
+    else if (hcp >= 10) mpfScore -= 250;
+    else if (hcp >= 5) mpfScore -= 150;
 
-    if (playStyle === "aggressive") factor -= 10;
-    else if (playStyle === "conservative") factor += 10;
+    // Play style adjustments
+    if (playStyle === "aggressive") mpfScore += 50;
+    else if (playStyle === "conservative") mpfScore -= 50;
 
-    const expectedDistance = speed * 2.5;
-    const distanceRatio = dist / expectedDistance;
-    if (distanceRatio < 0.85) factor += 10;
-    else if (distanceRatio > 1.1) factor -= 5;
+    // Distance consistency check
+    if (speed > 0 && dist > 0) {
+      const expectedDistance = speed * 2.5;
+      const distanceRatio = dist / expectedDistance;
+      if (distanceRatio < 0.85) mpfScore -= 100; // Inconsistent, needs more forgiveness
+      else if (distanceRatio > 1.1) mpfScore += 50; // Consistent striker
+    }
 
-    factor = Math.max(0, Math.min(100, factor));
+    // Clamp MPF to realistic ranges
+    mpfScore = Math.max(350, Math.min(1000, mpfScore));
 
     let category = "";
     let recommendations: string[] = [];
 
-    if (factor >= 70) {
-      category = "High Forgiveness";
+    // MPF Rating Categories (based on Maltby Playability Factor standards)
+    if (mpfScore <= 500) {
+      category = "Ultra Game Improvement (MPF 350-500)";
       recommendations = [
-        "Game Improvement Irons (e.g., TaylorMade Stealth, Callaway Rogue ST Max)",
-        "Oversized Driver with High MOI (460cc head)",
-        "Hybrid Clubs (4H, 5H to replace long irons)",
-        "Perimeter-weighted Cavity Back Irons",
-        "High-loft Driver (10.5° - 12°)"
+        "Cleveland Launcher XL Irons (MPF 427)",
+        "Callaway Rogue ST Max Irons (MPF 455)",
+        "TaylorMade Stealth HD Irons (MPF 468)",
+        "Oversized High MOI Driver (460cc, 10.5°-12°)",
+        "Hybrids to replace 4-6 irons for maximum forgiveness"
       ];
-    } else if (factor >= 50) {
-      category = "Moderate Forgiveness";
+    } else if (mpfScore <= 600) {
+      category = "Super Game Improvement (MPF 500-600)";
       recommendations = [
-        "Players Distance Irons (e.g., Ping G430, Mizuno JPX)",
-        "Adjustable Driver (9.5° - 10.5° loft)",
-        "One or Two Hybrids (3H, 4H)",
-        "Progressive Set Design (cavity backs to muscle)",
-        "Fairway Woods with Rail Design"
+        "Ping G430 Irons (MPF 556)",
+        "Cobra Aerojet Irons (MPF 542)",
+        "Mizuno JPX923 Hot Metal Irons (MPF 578)",
+        "Adjustable Driver (10°-11° loft)",
+        "2-3 Hybrids for long iron replacement"
       ];
-    } else if (factor >= 30) {
-      category = "Low Forgiveness";
+    } else if (mpfScore <= 700) {
+      category = "Game Improvement (MPF 600-700)";
       recommendations = [
-        "Players Irons (e.g., Titleist T100, Mizuno MP)",
-        "Low-spin Driver (8.5° - 9.5° loft)",
-        "Blade-style Short Irons",
-        "Traditional 3-wood and 5-wood",
-        "Forged Cavity Back Long Irons"
+        "TaylorMade Stealth Irons (MPF 645)",
+        "Titleist T300 Irons (MPF 668)",
+        "Callaway Paradym Irons (MPF 652)",
+        "Forgiving Driver (9.5°-10.5° loft)",
+        "Fairway woods with moderate offset"
+      ];
+    } else if (mpfScore <= 800) {
+      category = "Conventional/Players Distance (MPF 700-800)";
+      recommendations = [
+        "Titleist T200 Irons (MPF 745)",
+        "Mizuno JPX923 Forged (MPF 768)",
+        "Ping i530 Irons (MPF 732)",
+        "Low-spin Driver (9°-10° loft)",
+        "Progressive set: cavity backs to compact heads"
+      ];
+    } else if (mpfScore <= 900) {
+      category = "Players Irons (MPF 800-900)";
+      recommendations = [
+        "Titleist T100 Irons (MPF 847)",
+        "Mizuno MP-223 Irons (MPF 825)",
+        "TaylorMade P770 Irons (MPF 856)",
+        "Tour-level Driver (8.5°-9.5° loft)",
+        "Compact cavity back or split cavity design"
       ];
     } else {
-      category = "Tour Level";
+      category = "Classic/Tour Blades (MPF 900+)";
       recommendations = [
-        "Blade Irons (e.g., Titleist MB, Mizuno MP-20)",
-        "Low-loft Driver with Tour Shaft (8° - 9°)",
-        "Classic Muscle Back Design",
-        "Tour-caliber Woods and Hybrids",
-        "High-control Wedge Setup (52°, 56°, 60°)"
+        "Titleist MB (620) Irons (MPF 965)",
+        "Mizuno MP-20 Blades (MPF 1008)",
+        "Srixon ZX7 MKII Irons (MPF 912)",
+        "Tour Driver with low spin shaft (8°-9° loft)",
+        "Traditional muscle back forged irons"
       ];
     }
 
-    return { factor: Math.round(factor), category, recommendations };
+    return { factor: Math.round(mpfScore), category, recommendations };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
