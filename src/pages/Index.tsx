@@ -169,8 +169,6 @@ const Index = () => {
         {showFeedback && (
           <div ref={feedbackRef}>
             <FeedbackForm
-              calculationId={savedCalculationId}
-              userId={user?.id || null}
               onComplete={handleFeedbackComplete}
             />
           </div>

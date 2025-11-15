@@ -63,9 +63,9 @@ export const MarketplaceLinks = ({ result }: MarketplaceLinksProps) => {
                   rel="noopener noreferrer"
                   className="flex flex-col w-full h-full"
                 >
-                  <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center justify-between w-full gap-2">
                     <span className="font-semibold text-foreground">{link.title}</span>
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0">
                       {link.badge}
                     </span>
                   </div>
