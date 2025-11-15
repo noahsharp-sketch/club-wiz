@@ -227,6 +227,163 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                 </Select>
               </div>
 
+              {/* Swing Speed - for intermediate and expert */}
+              {experience !== "beginner" && (
+                <div className="space-y-2">
+                  <Label htmlFor="swingSpeed">Swing Speed (mph)</Label>
+                  <Input
+                    id="swingSpeed"
+                    type="number"
+                    placeholder="e.g., 95"
+                    value={swingSpeed}
+                    onChange={(e) => setSwingSpeed(e.target.value)}
+                    required
+                    className="border-input rounded-md shadow-sm"
+                  />
+                </div>
+              )}
+
+              {/* Handicap - for expert only */}
+              {experience === "expert" && (
+                <div className="space-y-2">
+                  <Label htmlFor="handicap">Handicap</Label>
+                  <Input
+                    id="handicap"
+                    type="number"
+                    placeholder="e.g., 12"
+                    value={handicap}
+                    onChange={(e) => setHandicap(e.target.value)}
+                    required
+                    className="border-input rounded-md shadow-sm"
+                  />
+                </div>
+              )}
+
+              {/* Average Distance - for intermediate and expert */}
+              {experience !== "beginner" && (
+                <div className="space-y-2">
+                  <Label htmlFor="avgDistance">Average 7-Iron Distance (yards)</Label>
+                  <Input
+                    id="avgDistance"
+                    type="number"
+                    placeholder="e.g., 150"
+                    value={avgDistance}
+                    onChange={(e) => setAvgDistance(e.target.value)}
+                    required
+                    className="border-input rounded-md shadow-sm"
+                  />
+                </div>
+              )}
+
+              {/* Play Style - for intermediate and expert */}
+              {experience !== "beginner" && (
+                <div className="space-y-2">
+                  <Label>Play Style</Label>
+                  <Select value={playStyle} onValueChange={setPlayStyle} required>
+                    <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                      <SelectValue placeholder="Select play style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="conservative">Conservative</SelectItem>
+                      <SelectItem value="balanced">Balanced</SelectItem>
+                      <SelectItem value="aggressive">Aggressive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Player Height */}
+              <div className="space-y-2">
+                <Label htmlFor="playerHeight">Player Height (inches)</Label>
+                <Input
+                  id="playerHeight"
+                  type="number"
+                  placeholder="e.g., 70"
+                  value={playerHeight}
+                  onChange={(e) => setPlayerHeight(e.target.value)}
+                  required
+                  className="border-input rounded-md shadow-sm"
+                />
+              </div>
+
+              {/* Wrist to Floor */}
+              <div className="space-y-2">
+                <Label htmlFor="wristToFloor">Wrist to Floor (inches)</Label>
+                <Input
+                  id="wristToFloor"
+                  type="number"
+                  placeholder="e.g., 34"
+                  value={wristToFloor}
+                  onChange={(e) => setWristToFloor(e.target.value)}
+                  required
+                  className="border-input rounded-md shadow-sm"
+                />
+              </div>
+
+              {/* Hand Size */}
+              <div className="space-y-2">
+                <Label>Hand Size</Label>
+                <Select value={handSize} onValueChange={setHandSize} required>
+                  <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                    <SelectValue placeholder="Select hand size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Small</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="large">Large</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Gender */}
+              <div className="space-y-2">
+                <Label>Gender</Label>
+                <Select value={gender} onValueChange={setGender} required>
+                  <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Handgrip Issues */}
+              <div className="space-y-2">
+                <Label>Any Handgrip Issues?</Label>
+                <Select value={handgripIssues} onValueChange={setHandgripIssues} required>
+                  <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                    <SelectValue placeholder="Select option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="arthritis">Arthritis</SelectItem>
+                    <SelectItem value="weak_grip">Weak Grip</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Ball Flight Tendency - for intermediate and expert */}
+              {experience !== "beginner" && (
+                <div className="space-y-2">
+                  <Label>Ball Flight Tendency</Label>
+                  <Select value={ballFlightTendency} onValueChange={setBallFlightTendency} required>
+                    <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                      <SelectValue placeholder="Select ball flight" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="slice">Slice</SelectItem>
+                      <SelectItem value="straight">Straight</SelectItem>
+                      <SelectItem value="draw">Draw</SelectItem>
+                      <SelectItem value="hook">Hook</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               {/* Optional Adjustments */}
               <div className="space-y-2">
                 <Label>Would you like to make optional adjustments?</Label>
@@ -240,6 +397,83 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Conditional Adjustment Fields */}
+              {useAdjustments === "yes" && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Club Length Adjustment</Label>
+                    <Select value={clubLengthAdjustment} onValueChange={setClubLengthAdjustment}>
+                      <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                        <SelectValue placeholder="Select adjustment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">Standard</SelectItem>
+                        <SelectItem value="+0.5">+0.5 inch</SelectItem>
+                        <SelectItem value="+1.0">+1.0 inch</SelectItem>
+                        <SelectItem value="-0.5">-0.5 inch</SelectItem>
+                        <SelectItem value="-1.0">-1.0 inch</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Lie Angle Adjustment</Label>
+                    <Select value={lieAngleAdjustment} onValueChange={setLieAngleAdjustment}>
+                      <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                        <SelectValue placeholder="Select adjustment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">Standard</SelectItem>
+                        <SelectItem value="upright">Upright (+2°)</SelectItem>
+                        <SelectItem value="flat">Flat (-2°)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Shaft Preference</Label>
+                    <Select value={shaftPreference} onValueChange={setShaftPreference}>
+                      <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                        <SelectValue placeholder="Select shaft" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="steel">Steel</SelectItem>
+                        <SelectItem value="graphite">Graphite</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Swing Weight Adjustment</Label>
+                    <Select value={swingWeightAdjustment} onValueChange={setSwingWeightAdjustment}>
+                      <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                        <SelectValue placeholder="Select adjustment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">Standard</SelectItem>
+                        <SelectItem value="lighter">Lighter</SelectItem>
+                        <SelectItem value="heavier">Heavier</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Grip Sizes</Label>
+                    <Select value={gripSizes} onValueChange={setGripSizes}>
+                      <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                        <SelectValue placeholder="Select grip size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">Standard</SelectItem>
+                        <SelectItem value="midsize">Midsize</SelectItem>
+                        <SelectItem value="jumbo">Jumbo</SelectItem>
+                        <SelectItem value="undersize">Undersize</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
 
               {/* Email Option */}
               <div className="space-y-2">
