@@ -7,27 +7,39 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, User } from "lucide-react";
+import { Loader2, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import heroImage from "@/assets/golf-hero.jpg";
 
+// Validation Schemas
 const emailSchema = z.string().email("Please enter a valid email address");
-const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
+const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters long")
+  .regex(/[A-Z]/, "Password must include at least one uppercase letter")
+  .regex(/[a-z]/, "Password must include at least one lowercase letter")
+  .regex(/\d/, "Password must include at least one number")
+  .regex(
+    /[!@#$%^&*()_\+\-\=\[\]\{\};'\\:"|<>?,.\/`~]/,
+    "Password must include at least one special character (!@#$%^&* etc.)"
+  );
 const nameSchema = z.string().min(2, "Name must be at least 2 characters").max(100, "Name is too long");
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
-  
+
   // Login form
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-  
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+
   // Signup form
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupName, setSignupName] = useState("");
-  
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -41,8 +53,7 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate inputs
+
     try {
       emailSchema.parse(loginEmail);
       passwordSchema.parse(loginPassword);
@@ -51,7 +62,7 @@ const Auth = () => {
         toast({
           variant: "destructive",
           title: "Validation Error",
-          description: error.errors[0].message
+          description: error.errors[0].message,
         });
         return;
       }
@@ -65,14 +76,15 @@ const Auth = () => {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error.message === "Invalid login credentials"
-          ? "Incorrect email or password. Please try again."
-          : "An error occurred during login. Please try again."
+        description:
+          error.message === "Invalid login credentials"
+            ? "Incorrect email or password. Please try again."
+            : "An error occurred during login. Please try again.",
       });
     } else {
       toast({
         title: "Welcome back!",
-        description: "You've successfully logged in."
+        description: "You've successfully logged in.",
       });
     }
 
@@ -81,8 +93,7 @@ const Auth = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate inputs
+
     try {
       emailSchema.parse(signupEmail);
       passwordSchema.parse(signupPassword);
@@ -92,7 +103,7 @@ const Auth = () => {
         toast({
           variant: "destructive",
           title: "Validation Error",
-          description: error.errors[0].message
+          description: error.errors[0].message,
         });
         return;
       }
@@ -108,12 +119,12 @@ const Auth = () => {
         title: "Signup Failed",
         description: error.message.includes("already registered")
           ? "This email is already registered. Please login instead."
-          : "An error occurred during signup. Please try again."
+          : "An error occurred during signup. Please try again.",
       });
     } else {
       toast({
         title: "Account Created!",
-        description: "Welcome to Club Finder. Let's find your perfect clubs!"
+        description: "Welcome to Club Finder. Let's find your perfect clubs!",
       });
     }
 
@@ -122,13 +133,13 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${heroImage})` }}
       >
         <div className="absolute inset-0 bg-secondary/90" />
       </div>
-      
+
       <div className="relative z-10 w-full max-w-md p-4">
         <Card className="shadow-golf border-primary/20">
           <CardHeader className="text-center">
@@ -173,19 +184,26 @@ const Auth = () => {
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="login-password"
-                        type="password"
+                        type={showLoginPassword ? "text" : "password"}
                         placeholder="••••••••"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 pr-10"
                         required
                         disabled={isLoading}
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                        className="absolute right-3 top-3 text-muted-foreground"
+                      >
+                        {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                     disabled={isLoading}
                   >
@@ -249,20 +267,27 @@ const Auth = () => {
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signup-password"
-                        type="password"
+                        type={showSignupPassword ? "text" : "password"}
                         placeholder="••••••••"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 pr-10"
                         required
                         disabled={isLoading}
-                        minLength={6}
+                        minLength={8}
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignupPassword(!showSignupPassword)}
+                        className="absolute right-3 top-3 text-muted-foreground"
+                      >
+                        {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                     disabled={isLoading}
                   >
