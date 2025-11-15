@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calculator } from "lucide-react";
+import emailjs from "@emailjs/browser";
 
 export interface PlayerData {
   swingSpeed?: number;
@@ -31,21 +32,15 @@ export interface PlayabilityResult {
 }
 
 interface ClubFinderFormProps {
-  onCalculate: (data: PlayerData, result: PlayabilityResult, userEmail?: string) => void;
+  onCalculate: (data: PlayerData, result: PlayabilityResult) => void;
 }
 
 export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
   const [experience, setExperience] = useState("beginner");
-  const [wantAdjustments, setWantAdjustments] = useState("no");
-  const [userEmail, setUserEmail] = useState("");
-
-  // Basic Playing Info
   const [swingSpeed, setSwingSpeed] = useState("");
   const [handicap, setHandicap] = useState("");
   const [avgDistance, setAvgDistance] = useState("");
   const [playStyle, setPlayStyle] = useState("");
-
-  // Required Fitting Info
   const [playerHeight, setPlayerHeight] = useState("");
   const [wristToFloor, setWristToFloor] = useState("");
   const [handSize, setHandSize] = useState("");
@@ -53,18 +48,21 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
   const [handgripIssues, setHandgripIssues] = useState("");
   const [ballFlightTendency, setBallFlightTendency] = useState("");
 
-  // Optional Adjustments
+  const [useAdjustments, setUseAdjustments] = useState("no");
   const [clubLengthAdjustment, setClubLengthAdjustment] = useState("standard");
   const [lieAngleAdjustment, setLieAngleAdjustment] = useState("standard");
   const [shaftPreference, setShaftPreference] = useState("steel");
   const [swingWeightAdjustment, setSwingWeightAdjustment] = useState("standard");
   const [gripSizes, setGripSizes] = useState("standard");
 
+  const [sendEmailOption, setSendEmailOption] = useState("no");
+  const [userEmail, setUserEmail] = useState("");
+
   const calculatePlayability = (): PlayabilityResult => {
     let factor = 0;
-    const speed = parseFloat(swingSpeed) || 0;
-    const hcp = parseFloat(handicap) || 0;
-    const dist = parseFloat(avgDistance) || 0;
+    const speed = parseFloat(swingSpeed || "0");
+    const hcp = parseFloat(handicap || "0");
+    const dist = parseFloat(avgDistance || "0");
 
     if (speed < 85) factor += 35;
     else if (speed < 95) factor += 25;
@@ -139,21 +137,38 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
       handicap: experience === "expert" ? parseFloat(handicap) : undefined,
       avgDistance: experience !== "beginner" ? parseFloat(avgDistance) : undefined,
       playStyle: experience !== "beginner" ? playStyle : undefined,
-      playerHeight: parseFloat(playerHeight) || undefined,
-      wristToFloor: parseFloat(wristToFloor) || undefined,
-      handSize: handSize || undefined,
-      gender: gender || undefined,
-      handgripIssues: handgripIssues || undefined,
-      ballFlightTendency: experience !== "beginner" ? ballFlightTendency || undefined : undefined,
-      clubLengthAdjustment: wantAdjustments === "yes" ? clubLengthAdjustment : undefined,
-      lieAngleAdjustment: wantAdjustments === "yes" ? lieAngleAdjustment : undefined,
-      shaftPreference: wantAdjustments === "yes" ? shaftPreference : undefined,
-      swingWeightAdjustment: wantAdjustments === "yes" ? swingWeightAdjustment : undefined,
-      gripSizes: wantAdjustments === "yes" ? gripSizes : undefined
+      playerHeight: parseFloat(playerHeight),
+      wristToFloor: parseFloat(wristToFloor),
+      handSize,
+      gender,
+      handgripIssues,
+      ballFlightTendency: experience === "beginner" ? undefined : ballFlightTendency,
+      clubLengthAdjustment: useAdjustments === "yes" ? clubLengthAdjustment : undefined,
+      lieAngleAdjustment: useAdjustments === "yes" ? lieAngleAdjustment : undefined,
+      shaftPreference: useAdjustments === "yes" ? shaftPreference : undefined,
+      swingWeightAdjustment: useAdjustments === "yes" ? swingWeightAdjustment : undefined,
+      gripSizes: useAdjustments === "yes" ? gripSizes : undefined,
     };
 
     const result = calculatePlayability();
-    onCalculate(playerData, result, userEmail || undefined);
+    onCalculate(playerData, result);
+
+    if (sendEmailOption === "yes" && userEmail) {
+      emailjs.send(
+        "service_9h83hig",
+        "template_rr5nx0l",
+        {
+          to_email: userEmail,
+          player_data: JSON.stringify(playerData, null, 2),
+          playability_result: JSON.stringify(result, null, 2),
+        },
+        "cPjYPfJ7KtCFh9yUB"
+      ).then(() => {
+        alert("Your results have been emailed!");
+      }).catch((err) => {
+        alert("Failed to send email: " + err.text);
+      });
+    }
   };
 
   return (
@@ -172,10 +187,10 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Experience Level */}
               <div className="space-y-2">
-                <Label htmlFor="experience">Select your experience level</Label>
-                <Select value={experience} onValueChange={setExperience} required>
-                  <SelectTrigger id="experience" className="border-input">
-                    <SelectValue placeholder="Select experience level" />
+                <Label>Experience Level</Label>
+                <Select value={experience} onValueChange={setExperience}>
+                  <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                    <SelectValue placeholder="Select experience" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="beginner">Beginner</SelectItem>
@@ -185,111 +200,12 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                 </Select>
               </div>
 
-              {/* Required Fitting Information */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-foreground border-b pb-2">
-                  Required Fitting Information
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="playerHeight">Player Height (inches)</Label>
-                    <Input
-                      id="playerHeight"
-                      type="number"
-                      placeholder="e.g., 70"
-                      value={playerHeight}
-                      onChange={(e) => setPlayerHeight(e.target.value)}
-                      className="border-input"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="wristToFloor">Wrist to Floor (inches)</Label>
-                    <Input
-                      id="wristToFloor"
-                      type="number"
-                      placeholder="e.g., 34"
-                      value={wristToFloor}
-                      onChange={(e) => setWristToFloor(e.target.value)}
-                      className="border-input"
-                      required
-                      min="28"
-                      max="42"
-                      step="0.5"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="handSize">Hand Size</Label>
-                    <Select value={handSize} onValueChange={setHandSize} required>
-                      <SelectTrigger id="handSize" className="border-input">
-                        <SelectValue placeholder="Select hand size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="small">Small</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="large">Large</SelectItem>
-                        <SelectItem value="extra-large">Extra Large</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="gender">Gender</Label>
-                    <Select value={gender} onValueChange={setGender} required>
-                      <SelectTrigger id="gender" className="border-input">
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="handgripIssues">Handgrip Issues</Label>
-                    <Select value={handgripIssues} onValueChange={setHandgripIssues} required>
-                      <SelectTrigger id="handgripIssues" className="border-input">
-                        <SelectValue placeholder="Select any issues" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="arthritis">Arthritis</SelectItem>
-                        <SelectItem value="carpal-tunnel">Carpal Tunnel</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {experience !== "beginner" && (
-                    <div className="space-y-2">
-                      <Label htmlFor="ballFlightTendency">Ball Flight Tendency</Label>
-                      <Select value={ballFlightTendency} onValueChange={setBallFlightTendency} required>
-                        <SelectTrigger id="ballFlightTendency" className="border-input">
-                          <SelectValue placeholder="Select tendency" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="straight">Straight</SelectItem>
-                          <SelectItem value="slice">Slice</SelectItem>
-                          <SelectItem value="hook">Hook</SelectItem>
-                          <SelectItem value="fade">Fade</SelectItem>
-                          <SelectItem value="draw">Draw</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Optional Adjustments Dropdown */}
+              {/* Optional Adjustments */}
               <div className="space-y-2">
-                <Label htmlFor="wantAdjustments">Do you want to make optional adjustments?</Label>
-                <Select value={wantAdjustments} onValueChange={setWantAdjustments}>
-                  <SelectTrigger id="wantAdjustments" className="border-input">
-                    <SelectValue placeholder="Select an option" />
+                <Label>Would you like to make optional adjustments?</Label>
+                <Select value={useAdjustments} onValueChange={setUseAdjustments}>
+                  <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                    <SelectValue placeholder="Select option" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="no">No</SelectItem>
@@ -298,50 +214,32 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                 </Select>
               </div>
 
-              {wantAdjustments === "yes" && (
-                <div className="space-y-6">
-                  {/* All optional adjustment fields here (same as previous form) */}
-                  {/* ... insert the previous adjustment fields like clubLengthAdjustment, lieAngleAdjustment, etc. ... */}
-                </div>
-              )}
-
-              {/* Email Dropdown */}
+              {/* Email Option */}
               <div className="space-y-2">
-                <Label htmlFor="wantEmail">Do you want the results emailed to you?</Label>
-                <Select value={userEmail ? "yes" : "no"} onValueChange={(val) => {
-                  if (val === "no") setUserEmail("");
-                }}>
-                  <SelectTrigger id="wantEmail" className="border-input">
-                    <SelectValue placeholder="Select an option" />
+                <Label>Would you like your results emailed?</Label>
+                <Select value={sendEmailOption} onValueChange={setSendEmailOption}>
+                  <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                    <SelectValue placeholder="Select option" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="no">No</SelectItem>
                     <SelectItem value="yes">Yes</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              {userEmail !== "" && (
-                <div className="space-y-2">
-                  <Label htmlFor="userEmail">Enter your email</Label>
+                {sendEmailOption === "yes" && (
                   <Input
-                    id="userEmail"
                     type="email"
-                    placeholder="your@email.com"
+                    placeholder="Enter your email"
                     value={userEmail}
                     onChange={(e) => setUserEmail(e.target.value)}
                     required
+                    className="border-input rounded-md shadow-sm"
                   />
-                </div>
-              )}
+                )}
+              </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6 shadow-golf"
-                size="lg"
-              >
-                <Calculator className="mr-2 h-5 w-5" />
-                Calculate My Factor
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6 shadow-golf">
+                <Calculator className="mr-2 h-5 w-5" /> Calculate My Factor
               </Button>
             </form>
           </CardContent>
