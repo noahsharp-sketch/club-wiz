@@ -17,13 +17,9 @@ export const Footer = () => {
           <div>
             <h3 className="text-xl font-bold mb-4 text-primary-foreground">Contact Us</h3>
             <div className="space-y-3">
-              <a href="mailto:info@clubfinder.com" className="flex items-center gap-2 text-secondary-foreground/80 hover:text-primary-foreground transition-colors">
+              <a href="mailto:Club-wizFinder@outlook.com" className="flex items-center gap-2 text-secondary-foreground/80 hover:text-primary-foreground transition-colors">
                 <Mail className="h-4 w-4" />
-                info@clubfinder.com
-              </a>
-              <a href="tel:+1234567890" className="flex items-center gap-2 text-secondary-foreground/80 hover:text-primary-foreground transition-colors">
-                <Phone className="h-4 w-4" />
-                (123) 456-7890
+                Club-wizFinder@outlook.com
               </a>
             </div>
           </div>
