@@ -58,56 +58,16 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
   const [userEmail, setUserEmail] = useState("");
 
   const calculatePlayability = (): PlayabilityResult => {
-    let mpfScore = 1000;
+    // Simple example calculation
     const speed = parseFloat(swingSpeed || "0");
     const hcp = parseFloat(handicap || "0");
     const dist = parseFloat(avgDistance || "0");
 
-    if (speed < 85) mpfScore -= 500;
-    else if (speed < 95) mpfScore -= 350;
-    else if (speed < 105) mpfScore -= 200;
-    else mpfScore -= 50;
+    let factor = Math.max(0, Math.min(100, speed * 0.5 + (20 - hcp) * 2 + dist * 0.1));
+    let category = factor > 70 ? "High Forgiveness" : factor > 50 ? "Moderate Forgiveness" : "Low Forgiveness";
+    const recommendations = ["Example Club 1", "Example Club 2", "Example Club 3"];
 
-    if (hcp >= 20) mpfScore -= 450;
-    else if (hcp >= 15) mpfScore -= 350;
-    else if (hcp >= 10) mpfScore -= 250;
-    else if (hcp >= 5) mpfScore -= 150;
-
-    if (playStyle === "aggressive") mpfScore += 50;
-    else if (playStyle === "conservative") mpfScore -= 50;
-
-    if (speed > 0 && dist > 0) {
-      const expected = speed * 2.5;
-      const ratio = dist / expected;
-      if (ratio < 0.85) mpfScore -= 100;
-      else if (ratio > 1.1) mpfScore += 50;
-    }
-
-    mpfScore = Math.max(350, Math.min(1000, mpfScore));
-    let category = "";
-    let recommendations: string[] = [];
-
-    if (mpfScore <= 500) {
-      category = "Ultra Game Improvement (MPF 350-500)";
-      recommendations = ["Cleveland Launcher XL", "Callaway Rogue ST Max", "TaylorMade Stealth HD"];
-    } else if (mpfScore <= 600) {
-      category = "Super Game Improvement (MPF 500-600)";
-      recommendations = ["Ping G430", "Cobra Aerojet", "Mizuno JPX923 Hot Metal"];
-    } else if (mpfScore <= 700) {
-      category = "Game Improvement (MPF 600-700)";
-      recommendations = ["TaylorMade Stealth", "Titleist T300", "Callaway Paradym"];
-    } else if (mpfScore <= 800) {
-      category = "Players Distance (MPF 700-800)";
-      recommendations = ["Titleist T200", "Mizuno JPX923 Forged", "Ping i530"];
-    } else if (mpfScore <= 900) {
-      category = "Players Irons (MPF 800-900)";
-      recommendations = ["Titleist T100", "Mizuno MP-223", "TaylorMade P770"];
-    } else {
-      category = "Tour Blades (MPF 900+)";
-      recommendations = ["Titleist MB", "Mizuno MP-20", "Srixon ZX7"];
-    }
-
-    return { factor: Math.round(mpfScore), category, recommendations };
+    return { factor: Math.round(factor), category, recommendations };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -140,14 +100,14 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
           "service_9h83hig",
           "template_rr5nx0l",
           {
-            user_email: userEmail,
+            to_email: userEmail,
             player_data: JSON.stringify(playerData, null, 2),
             playability_result: JSON.stringify(result, null, 2),
           },
           "cPjYPfJ7KtCFh9yUB"
         )
         .then(() => alert("Your results have been emailed!"))
-        .catch((err) => alert("Email failed: " + err.text));
+        .catch((err) => alert("Failed to send email: " + err.text));
     }
   };
 
@@ -156,37 +116,58 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
       <div className="container mx-auto px-4">
         <Card className="max-w-2xl mx-auto shadow-card-golf border-border">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold text-foreground">Calculate Your Playability Factor</CardTitle>
-            <CardDescription className="text-lg">Enter your golf data to discover your ideal club specs</CardDescription>
+            <CardTitle className="text-3xl font-bold text-foreground">
+              Calculate Your Playability Factor
+            </CardTitle>
+            <CardDescription className="text-lg">
+              Enter your golf data to discover your ideal club specifications
+            </CardDescription>
           </CardHeader>
-
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
 
-              {/* Swing Speed */}
+              {/* Basic Playing Info */}
               <div className="space-y-2">
-                <Label>Swing Speed (mph)</Label>
-                <Input required type="number" value={swingSpeed} onChange={(e) => setSwingSpeed(e.target.value)} />
+                <Label htmlFor="swingSpeed">Driver Swing Speed (mph)</Label>
+                <Input
+                  id="swingSpeed"
+                  type="number"
+                  placeholder="e.g., 95"
+                  value={swingSpeed}
+                  onChange={(e) => setSwingSpeed(e.target.value)}
+                  required
+                />
               </div>
 
-              {/* Handicap REQUIRED */}
               <div className="space-y-2">
-                <Label>Handicap</Label>
-                <Input required type="number" value={handicap} onChange={(e) => setHandicap(e.target.value)} />
+                <Label htmlFor="handicap">Handicap</Label>
+                <Input
+                  id="handicap"
+                  type="number"
+                  placeholder="e.g., 12"
+                  value={handicap}
+                  onChange={(e) => setHandicap(e.target.value)}
+                  required
+                />
               </div>
 
-              {/* Avg Distance */}
               <div className="space-y-2">
-                <Label>Average 7-Iron Distance (yards)</Label>
-                <Input required type="number" value={avgDistance} onChange={(e) => setAvgDistance(e.target.value)} />
+                <Label htmlFor="avgDistance">Average 7-Iron Distance (yards)</Label>
+                <Input
+                  id="avgDistance"
+                  type="number"
+                  placeholder="e.g., 150"
+                  value={avgDistance}
+                  onChange={(e) => setAvgDistance(e.target.value)}
+                  required
+                />
               </div>
 
-              {/* Play Style */}
               <div className="space-y-2">
                 <Label>Play Style</Label>
                 <Select value={playStyle} onValueChange={setPlayStyle} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select play style" />
+                    <SelectValue placeholder="Select play style (e.g., Balanced)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="conservative">Conservative</SelectItem>
@@ -196,24 +177,36 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                 </Select>
               </div>
 
-              {/* Height */}
+              {/* Required Fitting Info */}
               <div className="space-y-2">
-                <Label>Player Height (inches)</Label>
-                <Input required type="number" value={playerHeight} onChange={(e) => setPlayerHeight(e.target.value)} />
+                <Label htmlFor="playerHeight">Player Height (inches)</Label>
+                <Input
+                  id="playerHeight"
+                  type="number"
+                  placeholder="e.g., 70"
+                  value={playerHeight}
+                  onChange={(e) => setPlayerHeight(e.target.value)}
+                  required
+                />
               </div>
 
-              {/* Wrist to Floor */}
               <div className="space-y-2">
-                <Label>Wrist to Floor (inches)</Label>
-                <Input required type="number" value={wristToFloor} onChange={(e) => setWristToFloor(e.target.value)} />
+                <Label htmlFor="wristToFloor">Wrist to Floor (inches)</Label>
+                <Input
+                  id="wristToFloor"
+                  type="number"
+                  placeholder='e.g., 34"'
+                  value={wristToFloor}
+                  onChange={(e) => setWristToFloor(e.target.value)}
+                  required
+                />
               </div>
 
-              {/* Hand Size */}
               <div className="space-y-2">
                 <Label>Hand Size</Label>
                 <Select value={handSize} onValueChange={setHandSize} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select hand size" />
+                    <SelectValue placeholder="Select hand size (e.g., Medium)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="small">Small</SelectItem>
@@ -223,12 +216,11 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                 </Select>
               </div>
 
-              {/* Gender */}
               <div className="space-y-2">
                 <Label>Gender</Label>
                 <Select value={gender} onValueChange={setGender} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
+                    <SelectValue placeholder="Select gender (e.g., Male)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="male">Male</SelectItem>
@@ -238,12 +230,11 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                 </Select>
               </div>
 
-              {/* Handgrip Issues */}
               <div className="space-y-2">
                 <Label>Handgrip Issues</Label>
                 <Select value={handgripIssues} onValueChange={setHandgripIssues} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select" />
+                    <SelectValue placeholder="Select option (e.g., None)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
@@ -254,12 +245,11 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                 </Select>
               </div>
 
-              {/* Ball Flight Tendency */}
               <div className="space-y-2">
                 <Label>Ball Flight Tendency</Label>
                 <Select value={ballFlightTendency} onValueChange={setBallFlightTendency} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select ball flight" />
+                    <SelectValue placeholder="Select ball flight (e.g., Straight)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="slice">Slice</SelectItem>
@@ -272,7 +262,7 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
 
               {/* Optional Adjustments */}
               <div className="space-y-2">
-                <Label>Would you like to make adjustments?</Label>
+                <Label>Would you like to make optional adjustments?</Label>
                 <Select value={useAdjustments} onValueChange={setUseAdjustments}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select option" />
@@ -290,7 +280,7 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                     <Label>Club Length Adjustment</Label>
                     <Select value={clubLengthAdjustment} onValueChange={setClubLengthAdjustment}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder="Select adjustment (e.g., Standard)" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="standard">Standard</SelectItem>
@@ -306,7 +296,7 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                     <Label>Lie Angle Adjustment</Label>
                     <Select value={lieAngleAdjustment} onValueChange={setLieAngleAdjustment}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder="Select adjustment (e.g., Standard)" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="standard">Standard</SelectItem>
@@ -320,7 +310,7 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                     <Label>Shaft Preference</Label>
                     <Select value={shaftPreference} onValueChange={setShaftPreference}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder="Select shaft (e.g., Steel)" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="steel">Steel</SelectItem>
@@ -333,7 +323,7 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                     <Label>Swing Weight Adjustment</Label>
                     <Select value={swingWeightAdjustment} onValueChange={setSwingWeightAdjustment}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder="Select option (e.g., Standard)" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="standard">Standard</SelectItem>
@@ -344,10 +334,10 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Grip Size</Label>
+                    <Label>Grip Sizes</Label>
                     <Select value={gripSizes} onValueChange={setGripSizes}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder="Select grip size (e.g., Standard)" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="standard">Standard</SelectItem>
@@ -360,7 +350,7 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                 </>
               )}
 
-              {/* Email Option */}
+              {/* Email */}
               <div className="space-y-2">
                 <Label>Would you like your results emailed?</Label>
                 <Select value={sendEmailOption} onValueChange={setSendEmailOption}>
@@ -372,19 +362,18 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                     <SelectItem value="yes">Yes</SelectItem>
                   </SelectContent>
                 </Select>
-
                 {sendEmailOption === "yes" && (
                   <Input
-                    required
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="e.g., name@example.com"
                     value={userEmail}
                     onChange={(e) => setUserEmail(e.target.value)}
+                    required
                   />
                 )}
               </div>
 
-              <Button type="submit" className="w-full text-lg py-6">
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6 shadow-golf">
                 <Calculator className="mr-2 h-5 w-5" /> Calculate My Factor
               </Button>
             </form>
