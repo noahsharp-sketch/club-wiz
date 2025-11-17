@@ -27,7 +27,6 @@ export interface PlayerData {
 
 export interface PlayabilityResult {
   factor: number;
-  maxFactor: number;
   category: string;
   recommendations: string[];
 }
@@ -38,7 +37,6 @@ interface ClubFinderFormProps {
 
 export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
   const [experience, setExperience] = useState("beginner");
-
   const [swingSpeed, setSwingSpeed] = useState("");
   const [handicap, setHandicap] = useState("");
   const [avgDistance, setAvgDistance] = useState("");
@@ -61,79 +59,74 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
   const [userEmail, setUserEmail] = useState("");
 
   const calculatePlayability = (): PlayabilityResult => {
+    let factor = 0;
     const speed = parseFloat(swingSpeed || "0");
     const hcp = parseFloat(handicap || "0");
     const dist = parseFloat(avgDistance || "0");
 
-    // MPF system: 150-1000+ scale
-    // Base MPF on handicap (primary factor)
-    let mpf = 0;
-    
-    // Base MPF from handicap (most important factor)
-    if (hcp <= 5) {
-      mpf = 300; // Tour Blades range
-    } else if (hcp <= 10) {
-      mpf = 400; // Players Irons range
-    } else if (hcp <= 18) {
-      mpf = 550; // Players/Game Improvement transition
-    } else if (hcp <= 25) {
-      mpf = 700; // Super Game Improvement
-    } else {
-      mpf = 850; // Ultra Game Improvement
-    }
+    if (speed < 85) factor += 35;
+    else if (speed < 95) factor += 25;
+    else if (speed < 105) factor += 15;
+    else factor += 5;
 
-    // Adjust for swing speed (slower = need more forgiveness)
-    if (speed < 80) {
-      mpf += 80;
-    } else if (speed < 90) {
-      mpf += 50;
-    } else if (speed >= 100) {
-      mpf -= 30; // Fast swingers can use lower MPF
-    }
+    if (hcp >= 20) factor += 35;
+    else if (hcp >= 15) factor += 25;
+    else if (hcp >= 10) factor += 15;
+    else if (hcp >= 5) factor += 10;
+    else factor += 5;
 
-    // Adjust for play style
-    if (playStyle === "aggressive") {
-      mpf -= 40; // Aggressive players prefer more workability
-    } else if (playStyle === "conservative") {
-      mpf += 40; // Conservative players want more forgiveness
-    }
+    if (playStyle === "aggressive") factor -= 10;
+    else if (playStyle === "conservative") factor += 10;
 
-    // Adjust for distance efficiency
-    if (dist > 0 && speed > 0) {
-      const expectedDistance = speed * 2.5;
-      const efficiency = dist / expectedDistance;
-      if (efficiency < 0.85) {
-        mpf += 60; // Not getting distance = need more forgiveness
-      } else if (efficiency > 1.15) {
-        mpf -= 30; // Great ball striking = can use lower MPF
-      }
-    }
+    const expectedDistance = speed * 2.5;
+    const distanceRatio = dist / expectedDistance;
+    if (distanceRatio < 0.85) factor += 10;
+    else if (distanceRatio > 1.1) factor -= 5;
 
-    // Round to nearest 10
-    mpf = Math.round(mpf / 10) * 10;
-    
-    // Ensure within reasonable bounds
-    mpf = Math.max(250, Math.min(mpf, 1000));
+    factor = Math.max(0, Math.min(100, factor));
 
-    const maxFactor = 1000;
     let category = "";
     let recommendations: string[] = [];
 
-    if (mpf <= 450) {
-      category = "Tour Blades";
-      recommendations = ["Tour Blades", "Muscle Back Irons", "Tour Driver", "Long Irons"];
-    } else if (mpf <= 600) {
-      category = "Players Irons";
-      recommendations = ["Players Irons", "Players Distance Irons", "Adjustable Driver", "Utility Irons"];
-    } else if (mpf <= 800) {
-      category = "Super Game Improvement";
-      recommendations = ["Game Improvement Irons", "High-Launch Driver", "Hybrids", "Fairway Woods"];
+    if (factor >= 70) {
+      category = "High Forgiveness";
+      recommendations = [
+        "Game Improvement Irons (e.g., TaylorMade Stealth, Callaway Rogue ST Max)",
+        "Oversized Driver with High MOI (460cc head)",
+        "Hybrid Clubs (4H, 5H to replace long irons)",
+        "Perimeter-weighted Cavity Back Irons",
+        "High-loft Driver (10.5° - 12°)"
+      ];
+    } else if (factor >= 50) {
+      category = "Moderate Forgiveness";
+      recommendations = [
+        "Players Distance Irons (e.g., Ping G430, Mizuno JPX)",
+        "Adjustable Driver (9.5° - 10.5° loft)",
+        "One or Two Hybrids (3H, 4H)",
+        "Progressive Set Design (cavity backs to muscle)",
+        "Fairway Woods with Rail Design"
+      ];
+    } else if (factor >= 30) {
+      category = "Low Forgiveness";
+      recommendations = [
+        "Players Irons (e.g., Titleist T100, Mizuno MP)",
+        "Low-spin Driver (8.5° - 9.5° loft)",
+        "Blade-style Short Irons",
+        "Traditional 3-wood and 5-wood",
+        "Forged Cavity Back Long Irons"
+      ];
     } else {
-      category = "Ultra Game Improvement";
-      recommendations = ["Super Game Improvement Irons", "Oversized Driver", "Hybrids", "High-Launch Woods"];
+      category = "Tour Level";
+      recommendations = [
+        "Blade Irons (e.g., Titleist MB, Mizuno MP-20)",
+        "Low-loft Driver with Tour Shaft (8° - 9°)",
+        "Classic Muscle Back Design",
+        "Tour-caliber Woods and Hybrids",
+        "High-control Wedge Setup (52°, 56°, 60°)"
+      ];
     }
 
-    return { factor: mpf, maxFactor, category, recommendations };
+    return { factor: Math.round(factor), category, recommendations };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -166,23 +159,14 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
         "template_rr5nx0l",
         {
           to_email: userEmail,
-          to_name: userEmail.split('@')[0],
-          from_name: "Club Wizard",
-          reply_to: userEmail,
           player_data: JSON.stringify(playerData, null, 2),
           playability_result: JSON.stringify(result, null, 2),
-          mpf_score: result.factor,
-          mpf_category: result.category,
-          recommendations: result.recommendations.join("\n• "),
         },
         "cPjYPfJ7KtCFh9yUB"
-      )
-      .then(() => {
+      ).then(() => {
         alert("Your results have been emailed!");
-      })
-      .catch((err) => {
-        console.error("EmailJS error:", err);
-        alert("Failed to send email. Please check your email address or try again later.");
+      }).catch((err) => {
+        alert("Failed to send email: " + err.text);
       });
     }
   };
@@ -201,7 +185,7 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Experience */}
+              {/* Experience Level */}
               <div className="space-y-2">
                 <Label>Experience Level</Label>
                 <Select value={experience} onValueChange={setExperience}>
@@ -216,104 +200,13 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                 </Select>
               </div>
 
-              {/* Conditional fields for intermediate/expert */}
-              {experience !== "beginner" && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="swingSpeed">Swing Speed (mph)</Label>
-                    <Input id="swingSpeed" type="number" placeholder="95" value={swingSpeed} onChange={e => setSwingSpeed(e.target.value)} required />
-                  </div>
-                  {experience === "expert" && (
-                    <div className="space-y-2">
-                      <Label htmlFor="handicap">Handicap</Label>
-                      <Input id="handicap" type="number" placeholder="12" value={handicap} onChange={e => setHandicap(e.target.value)} required />
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    <Label htmlFor="avgDistance">Average Distance (yards)</Label>
-                    <Input id="avgDistance" type="number" placeholder="150" value={avgDistance} onChange={e => setAvgDistance(e.target.value)} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Play Style</Label>
-                    <Select value={playStyle} onValueChange={setPlayStyle} required>
-                      <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
-                        <SelectValue placeholder="Select play style" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="conservative">Conservative</SelectItem>
-                        <SelectItem value="balanced">Balanced</SelectItem>
-                        <SelectItem value="aggressive">Aggressive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
-
-              {/* Required fields always */}
-              <div className="space-y-2">
-                <Label>Player Height (inches)</Label>
-                <Input type="number" value={playerHeight} onChange={e => setPlayerHeight(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label>Wrist to Floor (inches)</Label>
-                <Input type="number" value={wristToFloor} onChange={e => setWristToFloor(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label>Hand Size</Label>
-                <Select value={handSize} onValueChange={setHandSize} required>
-                  <SelectTrigger><SelectValue placeholder="Select hand size" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="small">Small</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="large">Large</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Gender</Label>
-                <Select value={gender} onValueChange={setGender} required>
-                  <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Handgrip Issues</Label>
-                <Select value={handgripIssues} onValueChange={setHandgripIssues} required>
-                  <SelectTrigger><SelectValue placeholder="Select option" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="arthritis">Arthritis</SelectItem>
-                    <SelectItem value="weak_grip">Weak Grip</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Ball Flight Tendency */}
-              {experience !== "beginner" && (
-                <div className="space-y-2">
-                  <Label>Ball Flight Tendency</Label>
-                  <Select value={ballFlightTendency} onValueChange={setBallFlightTendency} required>
-                    <SelectTrigger><SelectValue placeholder="Select ball flight" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="straight">Straight</SelectItem>
-                      <SelectItem value="slice">Slice</SelectItem>
-                      <SelectItem value="draw">Draw</SelectItem>
-                      <SelectItem value="hook">Hook</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
               {/* Optional Adjustments */}
               <div className="space-y-2">
                 <Label>Would you like to make optional adjustments?</Label>
                 <Select value={useAdjustments} onValueChange={setUseAdjustments}>
-                  <SelectTrigger><SelectValue placeholder="Select option" /></SelectTrigger>
+                  <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                    <SelectValue placeholder="Select option" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="no">No</SelectItem>
                     <SelectItem value="yes">Yes</SelectItem>
@@ -321,35 +214,27 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                 </Select>
               </div>
 
-              {useAdjustments === "yes" && (
-                <>
-                  {/* Example optional adjustment */}
-                  <div className="space-y-2">
-                    <Label>Club Length Adjustment</Label>
-                    <Select value={clubLengthAdjustment} onValueChange={setClubLengthAdjustment}>
-                      <SelectTrigger><SelectValue placeholder="Select adjustment" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="standard">Standard</SelectItem>
-                        <SelectItem value="+0.5">+0.5 inch</SelectItem>
-                        <SelectItem value="-0.5">-0.5 inch</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
-
-              {/* Email option */}
+              {/* Email Option */}
               <div className="space-y-2">
                 <Label>Would you like your results emailed?</Label>
                 <Select value={sendEmailOption} onValueChange={setSendEmailOption}>
-                  <SelectTrigger><SelectValue placeholder="Select option" /></SelectTrigger>
+                  <SelectTrigger className="border-input rounded-md shadow-sm hover:border-primary focus:ring-2 focus:ring-primary">
+                    <SelectValue placeholder="Select option" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="no">No</SelectItem>
                     <SelectItem value="yes">Yes</SelectItem>
                   </SelectContent>
                 </Select>
                 {sendEmailOption === "yes" && (
-                  <Input type="email" placeholder="Enter your email" value={userEmail} onChange={e => setUserEmail(e.target.value)} required />
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    required
+                    className="border-input rounded-md shadow-sm"
+                  />
                 )}
               </div>
 
