@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Hero } from "@/components/Hero";
 import { HowItWorks } from "@/components/HowItWorks";
+import { MPFExplanation } from "@/components/MPFExplanation";
 import { ClubFinderForm, PlayerData, PlayabilityResult } from "@/components/ClubFinderForm";
 import { ClubPreferencesForm, ClubPreferences } from "@/components/ClubPreferencesForm";
 import { Results } from "@/components/Results";
@@ -147,6 +148,7 @@ const Index = () => {
       <div className="pt-20">
         <Hero onGetStarted={handleGetStarted} />
         <HowItWorks />
+        <MPFExplanation />
         <div ref={calculatorRef}>
           <ClubFinderForm onCalculate={handleCalculate} />
         </div>
