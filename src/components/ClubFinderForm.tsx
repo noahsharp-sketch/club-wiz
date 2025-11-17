@@ -144,10 +144,14 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
         "template_rr5nx0l",
         {
           to_email: userEmail,
+          to_name: userEmail.split('@')[0],
+          from_name: "Club Wizard",
+          reply_to: userEmail,
           player_data: JSON.stringify(playerData, null, 2),
-          playability_result: `${result.factor}/${result.maxFactor} - ${result.category}\nRecommendations:\n${result.recommendations.join(
-            "\n"
-          )}`,
+          playability_result: JSON.stringify(result, null, 2),
+          mpf_score: result.factor,
+          mpf_category: result.category,
+          recommendations: result.recommendations.join("\n• "),
         },
         "cPjYPfJ7KtCFh9yUB"
       )
@@ -155,8 +159,8 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
         alert("Your results have been emailed!");
       })
       .catch((err) => {
-        console.error(err);
-        alert("Failed to send email: " + err.text);
+        console.error("EmailJS error:", err);
+        alert("Failed to send email. Please check your email address or try again later.");
       });
     }
   };
