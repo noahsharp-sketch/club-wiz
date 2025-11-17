@@ -65,53 +65,75 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
     const hcp = parseFloat(handicap || "0");
     const dist = parseFloat(avgDistance || "0");
 
-    let factor = 0;
-    let maxFactor = 819; // Example maximum factor
+    // MPF system: 150-1000+ scale
+    // Base MPF on handicap (primary factor)
+    let mpf = 0;
+    
+    // Base MPF from handicap (most important factor)
+    if (hcp <= 5) {
+      mpf = 300; // Tour Blades range
+    } else if (hcp <= 10) {
+      mpf = 400; // Players Irons range
+    } else if (hcp <= 18) {
+      mpf = 550; // Players/Game Improvement transition
+    } else if (hcp <= 25) {
+      mpf = 700; // Super Game Improvement
+    } else {
+      mpf = 850; // Ultra Game Improvement
+    }
 
-    if (experience !== "beginner") {
-      if (speed < 85) factor += 35;
-      else if (speed < 95) factor += 25;
-      else if (speed < 105) factor += 15;
-      else factor += 5;
+    // Adjust for swing speed (slower = need more forgiveness)
+    if (speed < 80) {
+      mpf += 80;
+    } else if (speed < 90) {
+      mpf += 50;
+    } else if (speed >= 100) {
+      mpf -= 30; // Fast swingers can use lower MPF
+    }
 
-      if (experience === "expert") {
-        if (hcp >= 20) factor += 35;
-        else if (hcp >= 15) factor += 25;
-        else if (hcp >= 10) factor += 15;
-        else if (hcp >= 5) factor += 10;
-        else factor += 5;
-      }
+    // Adjust for play style
+    if (playStyle === "aggressive") {
+      mpf -= 40; // Aggressive players prefer more workability
+    } else if (playStyle === "conservative") {
+      mpf += 40; // Conservative players want more forgiveness
+    }
 
-      if (playStyle === "aggressive") factor -= 10;
-      else if (playStyle === "conservative") factor += 10;
-
-      if (dist > 0) {
-        const expectedDistance = speed * 2.5;
-        const ratio = dist / expectedDistance;
-        if (ratio < 0.85) factor += 10;
-        else if (ratio > 1.1) factor -= 5;
+    // Adjust for distance efficiency
+    if (dist > 0 && speed > 0) {
+      const expectedDistance = speed * 2.5;
+      const efficiency = dist / expectedDistance;
+      if (efficiency < 0.85) {
+        mpf += 60; // Not getting distance = need more forgiveness
+      } else if (efficiency > 1.15) {
+        mpf -= 30; // Great ball striking = can use lower MPF
       }
     }
 
-    factor = Math.round(factor);
+    // Round to nearest 10
+    mpf = Math.round(mpf / 10) * 10;
+    
+    // Ensure within reasonable bounds
+    mpf = Math.max(250, Math.min(mpf, 1000));
+
+    const maxFactor = 1000;
     let category = "";
     let recommendations: string[] = [];
 
-    if (factor >= 70) {
-      category = "High Forgiveness";
-      recommendations = ["Game Improvement Irons", "Oversized Driver", "Hybrids"];
-    } else if (factor >= 50) {
-      category = "Moderate Forgiveness";
-      recommendations = ["Players Distance Irons", "Adjustable Driver", "Hybrids"];
-    } else if (factor >= 30) {
-      category = "Low Forgiveness";
-      recommendations = ["Players Irons", "Low-spin Driver", "Blade-style Irons"];
+    if (mpf <= 450) {
+      category = "Tour Blades";
+      recommendations = ["Tour Blades", "Muscle Back Irons", "Tour Driver", "Long Irons"];
+    } else if (mpf <= 600) {
+      category = "Players Irons";
+      recommendations = ["Players Irons", "Players Distance Irons", "Adjustable Driver", "Utility Irons"];
+    } else if (mpf <= 800) {
+      category = "Super Game Improvement";
+      recommendations = ["Game Improvement Irons", "High-Launch Driver", "Hybrids", "Fairway Woods"];
     } else {
-      category = "Tour Level";
-      recommendations = ["Blade Irons", "Tour Driver", "Muscle Back Wedges"];
+      category = "Ultra Game Improvement";
+      recommendations = ["Super Game Improvement Irons", "Oversized Driver", "Hybrids", "High-Launch Woods"];
     }
 
-    return { factor, maxFactor, category, recommendations };
+    return { factor: mpf, maxFactor, category, recommendations };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
