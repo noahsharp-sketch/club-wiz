@@ -1,13 +1,11 @@
-"use client";
-
 import { useState } from "react";
+import { Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import emailjs from "@emailjs/browser";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FeedbackFormProps {
   onComplete?: () => void;
@@ -36,17 +34,15 @@ export const FeedbackForm = ({ onComplete }: FeedbackFormProps) => {
     setIsSubmitting(true);
 
     try {
-      await emailjs.send(
-        "service_9h83hig", // your service ID
-        "template_88vezno", // your template ID
-        {
-          to_email: "Club-wizFinder@outlook.com", // your receiving email
-          from_name: name || "Anonymous",
-          rating: rating.toString(),
-          feedback: feedbackText || "No additional feedback",
+      const { error } = await supabase.functions.invoke("send-feedback", {
+        body: {
+          rating,
+          name: name || undefined,
+          feedbackText: feedbackText || undefined,
         },
-        "cPjYPfJ7KtCFh9yUB" // your public key
-      );
+      });
+
+      if (error) throw error;
 
       toast({
         title: "Thank You!",
@@ -60,7 +56,6 @@ export const FeedbackForm = ({ onComplete }: FeedbackFormProps) => {
 
       if (onComplete) onComplete();
     } catch (error) {
-      console.error(error);
       toast({
         title: "Submission Failed",
         description: "There was an error sending your feedback. Please try again.",

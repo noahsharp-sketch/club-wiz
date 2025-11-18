@@ -93,22 +93,6 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
 
     const result = calculatePlayability();
     onCalculate(playerData, result);
-
-    if (sendEmailOption === "yes" && userEmail) {
-      emailjs
-        .send(
-          "service_9h83hig",
-          "template_rr5nx0l",
-          {
-            to_email: userEmail,
-            player_data: JSON.stringify(playerData, null, 2),
-            playability_result: JSON.stringify(result, null, 2),
-          },
-          "cPjYPfJ7KtCFh9yUB"
-        )
-        .then(() => alert("Your results have been emailed!"))
-        .catch((err) => alert("Failed to send email: " + err.text));
-    }
   };
 
   return (
