@@ -53,9 +53,6 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
   const [swingWeightAdjustment, setSwingWeightAdjustment] = useState("standard");
   const [gripSizes, setGripSizes] = useState("standard");
 
-  const [sendEmailOption, setSendEmailOption] = useState("no");
-  const [userEmail, setUserEmail] = useState("");
-
   const calculatePlayability = (): PlayabilityResult => {
     // Simple example calculation
     const speed = parseFloat(swingSpeed || "0");
@@ -332,29 +329,6 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                   </div>
                 </>
               )}
-
-              {/* Email */}
-              <div className="space-y-2">
-                <Label>Would you like your results emailed?</Label>
-                <Select value={sendEmailOption} onValueChange={setSendEmailOption}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="no">No</SelectItem>
-                    <SelectItem value="yes">Yes</SelectItem>
-                  </SelectContent>
-                </Select>
-                {sendEmailOption === "yes" && (
-                  <Input
-                    type="email"
-                    placeholder="e.g., name@example.com"
-                    value={userEmail}
-                    onChange={(e) => setUserEmail(e.target.value)}
-                    required
-                  />
-                )}
-              </div>
 
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6 shadow-golf">
                 <Calculator className="mr-2 h-5 w-5" /> Calculate My Factor

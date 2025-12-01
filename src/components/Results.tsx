@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, TrendingUp, Download, Settings, MessageSquare } from "lucide-react";
+import { CheckCircle2, TrendingUp, Download, Settings, MessageSquare, Mail } from "lucide-react";
 import { PlayabilityResult, PlayerData } from "./ClubFinderForm";
 import { ClubPreferences } from "./ClubPreferencesForm";
 import { MarketplaceLinks } from "./MarketplaceLinks";
+import { EmailDeliveryForm } from "./EmailDeliveryForm";
 import { exportToPDF } from "@/lib/pdfExport";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,6 +20,7 @@ interface ResultsProps {
 
 export const Results = ({ playerData, result, preferences, onShowPreferences, onShowFeedback }: ResultsProps) => {
   const { toast } = useToast();
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   const handleExportPDF = () => {
     try {
@@ -35,6 +38,23 @@ export const Results = ({ playerData, result, preferences, onShowPreferences, on
     }
   };
 
+  if (showEmailForm) {
+    return (
+      <section className="py-20 bg-gradient-to-b from-muted to-background">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto">
+            <EmailDeliveryForm
+              playerData={playerData}
+              result={result}
+              preferences={preferences}
+              onComplete={() => setShowEmailForm(false)}
+            />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-20 bg-gradient-to-b from-muted to-background">
       <div className="container mx-auto px-4">
@@ -46,9 +66,17 @@ export const Results = ({ playerData, result, preferences, onShowPreferences, on
             <p className="text-xl text-muted-foreground">
               Based on your unique playing profile
             </p>
-            <div className="flex gap-4 justify-center mt-6">
+            <div className="flex flex-wrap gap-4 justify-center mt-6">
+              <Button 
+                onClick={() => setShowEmailForm(true)}
+                size="lg"
+              >
+                <Mail className="mr-2 h-5 w-5" />
+                Email Results
+              </Button>
               <Button 
                 onClick={handleExportPDF}
+                variant="outline"
                 size="lg"
               >
                 <Download className="mr-2 h-5 w-5" />
