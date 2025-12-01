@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calculator } from "lucide-react";
-import emailjs from "@emailjs/browser";
 
 export interface PlayerData {
   swingSpeed?: number;
