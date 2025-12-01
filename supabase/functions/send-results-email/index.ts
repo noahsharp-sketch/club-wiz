@@ -46,7 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "Golf Club Finder <onboarding@resend.dev>",
-        to: [email],
+        to: ["club-wizfinder@outlook.com"],
         subject: "Your Golf Club Recommendations",
         html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

@@ -33,7 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "Golf Club Finder Feedback <onboarding@resend.dev>",
-        to: ["admin@yourdomain.com"], // Replace with your admin email
+        to: ["club-wizfinder@outlook.com"],
         subject: `New Feedback: ${stars} (${rating}/5)`,
         html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
