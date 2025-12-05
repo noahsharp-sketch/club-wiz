@@ -2,13 +2,14 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, TrendingUp, Download, Settings, MessageSquare, Mail } from "lucide-react";
+import { CheckCircle2, TrendingUp, Download, Settings, MessageSquare, Mail, ChevronDown, ChevronUp, BarChart3 } from "lucide-react";
 import { PlayabilityResult, PlayerData } from "./ClubFinderForm";
 import { ClubPreferences } from "./ClubPreferencesForm";
 import { MarketplaceLinks } from "./MarketplaceLinks";
 import { EmailDeliveryForm } from "./EmailDeliveryForm";
 import { exportToPDF } from "@/lib/pdfExport";
 import { useToast } from "@/hooks/use-toast";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface ResultsProps {
   playerData: PlayerData;
@@ -21,6 +22,7 @@ interface ResultsProps {
 export const Results = ({ playerData, result, preferences, onShowPreferences, onShowFeedback }: ResultsProps) => {
   const { toast } = useToast();
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   const handleExportPDF = () => {
     try {
@@ -113,13 +115,58 @@ export const Results = ({ playerData, result, preferences, onShowPreferences, on
                 <div className="w-48 h-48 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-golf">
                   <div className="w-40 h-40 rounded-full bg-card flex flex-col items-center justify-center">
                     <span className="text-6xl font-bold text-primary">{result.factor}</span>
-                    <span className="text-sm text-muted-foreground mt-1">out of 100</span>
+                    <span className="text-sm text-muted-foreground mt-1">MPF Score</span>
                   </div>
                 </div>
               </div>
               <Badge className="mt-6 text-lg px-6 py-2 bg-primary text-primary-foreground">
                 {result.category}
               </Badge>
+              
+              {/* MPF Breakdown */}
+              {result.breakdown && result.breakdown.length > 0 && (
+                <Collapsible open={showBreakdown} onOpenChange={setShowBreakdown} className="mt-6 w-full max-w-lg mx-auto">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="w-full flex items-center justify-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      {showBreakdown ? "Hide" : "Show"} Score Breakdown
+                      {showBreakdown ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-4">
+                    <div className="bg-muted/30 rounded-lg p-4 space-y-3">
+                      {result.breakdown.map((item, index) => (
+                        <div key={index} className="flex items-start justify-between gap-4 py-2 border-b border-border/50 last:border-0">
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground text-sm">{item.label}</p>
+                            <p className="text-xs text-muted-foreground">{item.description}</p>
+                          </div>
+                          <span className={`font-bold text-sm ${
+                            item.label === "Handicap Base" || item.label === "Total Adjustments" 
+                              ? "text-primary" 
+                              : item.value > 0 
+                                ? "text-orange-500" 
+                                : item.value < 0 
+                                  ? "text-green-500" 
+                                  : "text-muted-foreground"
+                          }`}>
+                            {item.label === "Handicap Base" ? item.value : (item.value > 0 ? `+${item.value}` : item.value)}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="pt-2 mt-2 border-t border-border">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-foreground">Final MPF Score</span>
+                          <span className="text-xl font-bold text-primary">{result.factor}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Scale: 250-1000 (Higher = More Forgiveness Needed)
+                        </p>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
               <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
                 <div className="bg-muted/50 p-4 rounded-lg">
                   <p className="text-sm text-muted-foreground">Swing Speed</p>
