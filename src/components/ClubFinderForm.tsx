@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calculator } from "lucide-react";
+import emailjs from "@emailjs/browser";
 
 export interface PlayerData {
   swingSpeed?: number;
@@ -24,17 +25,10 @@ export interface PlayerData {
   gripSizes?: string;
 }
 
-export interface MPFBreakdownItem {
-  label: string;
-  value: number;
-  description: string;
-}
-
 export interface PlayabilityResult {
   factor: number;
   category: string;
   recommendations: string[];
-  breakdown: MPFBreakdownItem[];
 }
 
 interface ClubFinderFormProps {
@@ -60,221 +54,20 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
   const [swingWeightAdjustment, setSwingWeightAdjustment] = useState("standard");
   const [gripSizes, setGripSizes] = useState("standard");
 
+  const [sendEmailOption, setSendEmailOption] = useState("no");
+  const [userEmail, setUserEmail] = useState("");
+
   const calculatePlayability = (): PlayabilityResult => {
-    // MPF calculation based on Maltby Playability Factor system (250-1000 scale)
+    // Simple example calculation
     const speed = parseFloat(swingSpeed || "0");
-    const hcp = parseFloat(handicap || "36");
+    const hcp = parseFloat(handicap || "0");
     const dist = parseFloat(avgDistance || "0");
-    const height = parseFloat(playerHeight || "70");
-    const wrist = parseFloat(wristToFloor || "34");
 
-    // Track breakdown of factors
-    const breakdown: MPFBreakdownItem[] = [];
+    let factor = Math.max(0, Math.min(100, speed * 0.5 + (20 - hcp) * 2 + dist * 0.1));
+    let category = factor > 70 ? "High Forgiveness" : factor > 50 ? "Moderate Forgiveness" : "Low Forgiveness";
+    const recommendations = ["Example Club 1", "Example Club 2", "Example Club 3"];
 
-    // Base MPF primarily from handicap (higher handicap = higher MPF needed)
-    const handicapBase = 350 + (hcp * 15);
-    breakdown.push({
-      label: "Handicap Base",
-      value: handicapBase,
-      description: `Starting point based on ${hcp} handicap`
-    });
-
-    let adjustments = 0;
-
-    // Adjust for swing speed (slower swing = more forgiveness needed)
-    let speedAdj = 0;
-    if (speed < 85) {
-      speedAdj = 100;
-    } else if (speed < 95) {
-      speedAdj = 50;
-    } else if (speed > 105) {
-      speedAdj = -50;
-    }
-    if (speedAdj !== 0) {
-      adjustments += speedAdj;
-      breakdown.push({
-        label: "Swing Speed",
-        value: speedAdj,
-        description: speed < 95 ? "Slower swing benefits from more forgiveness" : "Faster swing allows less forgiving clubs"
-      });
-    }
-
-    // Adjust for play style
-    let styleAdj = 0;
-    if (playStyle === "conservative") {
-      styleAdj = 50;
-    } else if (playStyle === "aggressive") {
-      styleAdj = -30;
-    }
-    if (styleAdj !== 0) {
-      adjustments += styleAdj;
-      breakdown.push({
-        label: "Play Style",
-        value: styleAdj,
-        description: playStyle === "conservative" ? "Conservative players benefit from forgiveness" : "Aggressive players can handle less forgiving clubs"
-      });
-    }
-
-    // Adjust for distance efficiency
-    const expectedDist = speed * 1.5;
-    let distAdj = 0;
-    if (dist < expectedDist * 0.85) {
-      distAdj = 50;
-      adjustments += distAdj;
-      breakdown.push({
-        label: "Distance Efficiency",
-        value: distAdj,
-        description: "Below expected distance suggests need for more forgiveness"
-      });
-    }
-
-    // Adjust for ball flight tendency
-    let flightAdj = 0;
-    let flightDesc = "";
-    if (ballFlightTendency === "slice") {
-      flightAdj = 75;
-      flightDesc = "Slice tendency benefits from draw-biased, forgiving clubs";
-    } else if (ballFlightTendency === "hook") {
-      flightAdj = 50;
-      flightDesc = "Hook tendency needs some correction assistance";
-    } else if (ballFlightTendency === "draw") {
-      flightAdj = -20;
-      flightDesc = "Controlled draw indicates solid ball striking";
-    }
-    if (flightAdj !== 0) {
-      adjustments += flightAdj;
-      breakdown.push({
-        label: "Ball Flight",
-        value: flightAdj,
-        description: flightDesc
-      });
-    }
-
-    // Adjust for hand grip issues
-    let gripAdj = 0;
-    let gripDesc = "";
-    if (handgripIssues === "arthritis") {
-      gripAdj = 100;
-      gripDesc = "Arthritis requires lightweight, forgiving clubs";
-    } else if (handgripIssues === "weak_grip") {
-      gripAdj = 75;
-      gripDesc = "Weak grip benefits from lighter swing weight";
-    } else if (handgripIssues === "other") {
-      gripAdj = 50;
-      gripDesc = "Grip issues suggest need for more forgiveness";
-    }
-    if (gripAdj !== 0) {
-      adjustments += gripAdj;
-      breakdown.push({
-        label: "Grip Issues",
-        value: gripAdj,
-        description: gripDesc
-      });
-    }
-
-    // Adjust for gender
-    if (gender === "female") {
-      adjustments += 50;
-      breakdown.push({
-        label: "Gender",
-        value: 50,
-        description: "Women typically benefit from more forgiving, lighter clubs"
-      });
-    }
-
-    // Adjust for hand size
-    let handAdj = 0;
-    if (handSize === "small") {
-      handAdj = 25;
-    } else if (handSize === "large") {
-      handAdj = -15;
-    }
-    if (handAdj !== 0) {
-      adjustments += handAdj;
-      breakdown.push({
-        label: "Hand Size",
-        value: handAdj,
-        description: handSize === "small" ? "Smaller hands benefit from more forgiveness" : "Larger hands provide better club control"
-      });
-    }
-
-    // Calculate final factor
-    const rawFactor = handicapBase + adjustments;
-    const factor = Math.max(250, Math.min(1000, Math.round(rawFactor)));
-
-    // Add total adjustments to breakdown if any
-    if (adjustments !== 0) {
-      breakdown.push({
-        label: "Total Adjustments",
-        value: adjustments,
-        description: `Combined effect of all factors`
-      });
-    }
-
-    // Calculate club length adjustment based on height and wrist-to-floor
-    const heightDiff = height - 70;
-    const wristDiff = wrist - 34;
-    let lengthAdjustment = "";
-    const totalAdjustment = (heightDiff * 0.5 + wristDiff) / 2;
-    
-    if (totalAdjustment >= 1.5) {
-      lengthAdjustment = "+1.0 inch recommended";
-    } else if (totalAdjustment >= 0.75) {
-      lengthAdjustment = "+0.5 inch recommended";
-    } else if (totalAdjustment <= -1.5) {
-      lengthAdjustment = "-1.0 inch recommended";
-    } else if (totalAdjustment <= -0.75) {
-      lengthAdjustment = "-0.5 inch recommended";
-    }
-
-    // Determine category based on MPF
-    let category: string;
-    let recommendations: string[];
-
-    if (factor <= 450) {
-      category = "Tour Blades";
-      recommendations = [
-        "Mizuno MP-20 MB",
-        "Titleist 620 MB",
-        "Srixon Z-Forged"
-      ];
-    } else if (factor <= 600) {
-      category = "Players Irons";
-      recommendations = [
-        "Titleist T100",
-        "TaylorMade P7MC",
-        "Callaway Apex Pro"
-      ];
-    } else if (factor <= 800) {
-      category = "Super Game Improvement";
-      recommendations = [
-        "Callaway Paradym",
-        "TaylorMade Stealth",
-        "Ping G430"
-      ];
-    } else {
-      category = "Ultra Game Improvement";
-      recommendations = [
-        "Cleveland Launcher XL Halo",
-        "Callaway Rogue ST Max OS",
-        "Cobra Air-X"
-      ];
-    }
-
-    // Add fitting notes based on player characteristics
-    if (lengthAdjustment) {
-      recommendations.push(`Club Length: ${lengthAdjustment}`);
-    }
-    if (handgripIssues === "arthritis" || handgripIssues === "weak_grip") {
-      recommendations.push("Consider graphite shafts for reduced weight");
-    }
-    if (handSize === "large") {
-      recommendations.push("Midsize or Jumbo grips recommended");
-    } else if (handSize === "small") {
-      recommendations.push("Undersize grips recommended");
-    }
-
-    return { factor, category, recommendations, breakdown };
+    return { factor: Math.round(factor), category, recommendations };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -416,7 +209,6 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                   <SelectContent>
                     <SelectItem value="male">Male</SelectItem>
                     <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -540,6 +332,29 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                   </div>
                 </>
               )}
+
+              {/* Email */}
+              <div className="space-y-2">
+                <Label>Would you like your results emailed?</Label>
+                <Select value={sendEmailOption} onValueChange={setSendEmailOption}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="no">No</SelectItem>
+                    <SelectItem value="yes">Yes</SelectItem>
+                  </SelectContent>
+                </Select>
+                {sendEmailOption === "yes" && (
+                  <Input
+                    type="email"
+                    placeholder="e.g., name@example.com"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    required
+                  />
+                )}
+              </div>
 
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6 shadow-golf">
                 <Calculator className="mr-2 h-5 w-5" /> Calculate My Factor
