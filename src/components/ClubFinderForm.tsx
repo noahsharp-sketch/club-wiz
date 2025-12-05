@@ -58,6 +58,8 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
     const speed = parseFloat(swingSpeed || "0");
     const hcp = parseFloat(handicap || "36");
     const dist = parseFloat(avgDistance || "0");
+    const height = parseFloat(playerHeight || "70");
+    const wrist = parseFloat(wristToFloor || "34");
 
     // Base MPF primarily from handicap (higher handicap = higher MPF needed)
     // Scratch golfers (0 hcp) start around 350, high handicappers (36+) around 900
@@ -86,8 +88,55 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
       baseMPF += 50; // needs more forgiveness
     }
 
+    // Adjust for ball flight tendency (slice/hook indicates need for more forgiveness)
+    if (ballFlightTendency === "slice") {
+      baseMPF += 75; // slicers benefit from draw-biased, forgiving clubs
+    } else if (ballFlightTendency === "hook") {
+      baseMPF += 50; // hookers need some forgiveness but less than slicers
+    } else if (ballFlightTendency === "draw") {
+      baseMPF -= 20; // controlled draw indicates better ball striking
+    }
+
+    // Adjust for hand grip issues
+    if (handgripIssues === "arthritis") {
+      baseMPF += 100; // needs lightweight, forgiving clubs with larger grips
+    } else if (handgripIssues === "weak_grip") {
+      baseMPF += 75; // needs lighter swing weight and more forgiveness
+    } else if (handgripIssues === "other") {
+      baseMPF += 50;
+    }
+
+    // Adjust for gender (women typically benefit from more forgiveness and lighter clubs)
+    if (gender === "female") {
+      baseMPF += 50;
+    }
+
+    // Adjust for hand size (affects feel and control)
+    if (handSize === "small") {
+      baseMPF += 25; // smaller hands may benefit from more forgiveness
+    } else if (handSize === "large") {
+      baseMPF -= 15; // larger hands often have better club control
+    }
+
     // Clamp to valid MPF range (250-1000)
     const factor = Math.max(250, Math.min(1000, Math.round(baseMPF)));
+
+    // Calculate club length adjustment based on height and wrist-to-floor
+    // Standard is 70" height with 34" wrist-to-floor
+    const heightDiff = height - 70;
+    const wristDiff = wrist - 34;
+    let lengthAdjustment = "";
+    const totalAdjustment = (heightDiff * 0.5 + wristDiff) / 2;
+    
+    if (totalAdjustment >= 1.5) {
+      lengthAdjustment = "+1.0 inch recommended";
+    } else if (totalAdjustment >= 0.75) {
+      lengthAdjustment = "+0.5 inch recommended";
+    } else if (totalAdjustment <= -1.5) {
+      lengthAdjustment = "-1.0 inch recommended";
+    } else if (totalAdjustment <= -0.75) {
+      lengthAdjustment = "-0.5 inch recommended";
+    }
 
     // Determine category based on MPF
     let category: string;
@@ -121,6 +170,19 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
         "Callaway Rogue ST Max OS",
         "Cobra Air-X"
       ];
+    }
+
+    // Add fitting notes based on player characteristics
+    if (lengthAdjustment) {
+      recommendations.push(`Club Length: ${lengthAdjustment}`);
+    }
+    if (handgripIssues === "arthritis" || handgripIssues === "weak_grip") {
+      recommendations.push("Consider graphite shafts for reduced weight");
+    }
+    if (handSize === "large") {
+      recommendations.push("Midsize or Jumbo grips recommended");
+    } else if (handSize === "small") {
+      recommendations.push("Undersize grips recommended");
     }
 
     return { factor, category, recommendations };
