@@ -6,6 +6,33 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calculator } from "lucide-react";
 import emailjs from "@emailjs/browser";
+// Hover image tooltip
+const InfoHoverImage = ({ image, label }: { image: string; label?: string }) => {
+  return (
+    <span className="ml-2 relative group cursor-pointer text-primary font-bold">
+      ?
+      <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-52 p-2 bg-white border border-gray-300
+                      rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50">
+        <img src={image} alt={label || "Info"} className="w-full h-auto rounded" />
+        {label && <p className="text-xs text-gray-700 text-center mt-1">{label}</p>}
+      </div>
+    </span>
+  );
+};
+
+// Hover video tooltip
+const InfoHoverVideo = ({ video, label }: { video: string; label?: string }) => {
+  return (
+    <span className="ml-2 relative group cursor-pointer text-primary font-bold">
+      ?
+      <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-60 p-2 bg-white border border-gray-300
+                      rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50">
+        <video src={video} autoPlay loop muted className="w-full rounded" />
+        {label && <p className="text-xs text-gray-700 text-center mt-1">{label}</p>}
+      </div>
+    </span>
+  );
+};
 
 export interface PlayerData {
   swingSpeed?: number;
@@ -235,7 +262,10 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                     <SelectValue placeholder="Select ball flight (e.g., Straight)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="slice">Slice</SelectItem>
+                    <SelectItem value="slice">
+                      Slice
+                      <InfoHoverImage image="/assets/slice.jpeg" label="Typical slice shape" />
+                      </SelectItem>
                     <SelectItem value="straight">Straight</SelectItem>
                     <SelectItem value="draw">Draw</SelectItem>
                     <SelectItem value="hook">Hook</SelectItem>
