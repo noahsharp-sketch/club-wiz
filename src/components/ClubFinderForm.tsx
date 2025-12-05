@@ -54,16 +54,76 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
   const [gripSizes, setGripSizes] = useState("standard");
 
   const calculatePlayability = (): PlayabilityResult => {
-    // Simple example calculation
+    // MPF calculation based on Maltby Playability Factor system (250-1000 scale)
     const speed = parseFloat(swingSpeed || "0");
-    const hcp = parseFloat(handicap || "0");
+    const hcp = parseFloat(handicap || "36");
     const dist = parseFloat(avgDistance || "0");
 
-    let factor = Math.max(0, Math.min(100, speed * 0.5 + (20 - hcp) * 2 + dist * 0.1));
-    let category = factor > 70 ? "High Forgiveness" : factor > 50 ? "Moderate Forgiveness" : "Low Forgiveness";
-    const recommendations = ["Example Club 1", "Example Club 2", "Example Club 3"];
+    // Base MPF primarily from handicap (higher handicap = higher MPF needed)
+    // Scratch golfers (0 hcp) start around 350, high handicappers (36+) around 900
+    let baseMPF = 350 + (hcp * 15);
 
-    return { factor: Math.round(factor), category, recommendations };
+    // Adjust for swing speed (slower swing = more forgiveness needed)
+    // Average swing speed is ~95 mph
+    if (speed < 85) {
+      baseMPF += 100;
+    } else if (speed < 95) {
+      baseMPF += 50;
+    } else if (speed > 105) {
+      baseMPF -= 50;
+    }
+
+    // Adjust for play style
+    if (playStyle === "conservative") {
+      baseMPF += 50;
+    } else if (playStyle === "aggressive") {
+      baseMPF -= 30;
+    }
+
+    // Adjust for distance efficiency (expected distance vs actual)
+    const expectedDist = speed * 1.5; // rough estimate
+    if (dist < expectedDist * 0.85) {
+      baseMPF += 50; // needs more forgiveness
+    }
+
+    // Clamp to valid MPF range (250-1000)
+    const factor = Math.max(250, Math.min(1000, Math.round(baseMPF)));
+
+    // Determine category based on MPF
+    let category: string;
+    let recommendations: string[];
+
+    if (factor <= 450) {
+      category = "Tour Blades";
+      recommendations = [
+        "Mizuno MP-20 MB",
+        "Titleist 620 MB",
+        "Srixon Z-Forged"
+      ];
+    } else if (factor <= 600) {
+      category = "Players Irons";
+      recommendations = [
+        "Titleist T100",
+        "TaylorMade P7MC",
+        "Callaway Apex Pro"
+      ];
+    } else if (factor <= 800) {
+      category = "Super Game Improvement";
+      recommendations = [
+        "Callaway Paradym",
+        "TaylorMade Stealth",
+        "Ping G430"
+      ];
+    } else {
+      category = "Ultra Game Improvement";
+      recommendations = [
+        "Cleveland Launcher XL Halo",
+        "Callaway Rogue ST Max OS",
+        "Cobra Air-X"
+      ];
+    }
+
+    return { factor, category, recommendations };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
