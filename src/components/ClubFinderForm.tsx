@@ -24,10 +24,17 @@ export interface PlayerData {
   gripSizes?: string;
 }
 
+export interface MPFBreakdownItem {
+  label: string;
+  value: number;
+  description: string;
+}
+
 export interface PlayabilityResult {
   factor: number;
   category: string;
   recommendations: string[];
+  breakdown: MPFBreakdownItem[];
 }
 
 interface ClubFinderFormProps {
@@ -61,68 +68,150 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
     const height = parseFloat(playerHeight || "70");
     const wrist = parseFloat(wristToFloor || "34");
 
+    // Track breakdown of factors
+    const breakdown: MPFBreakdownItem[] = [];
+
     // Base MPF primarily from handicap (higher handicap = higher MPF needed)
-    // Scratch golfers (0 hcp) start around 350, high handicappers (36+) around 900
-    let baseMPF = 350 + (hcp * 15);
+    const handicapBase = 350 + (hcp * 15);
+    breakdown.push({
+      label: "Handicap Base",
+      value: handicapBase,
+      description: `Starting point based on ${hcp} handicap`
+    });
+
+    let adjustments = 0;
 
     // Adjust for swing speed (slower swing = more forgiveness needed)
-    // Average swing speed is ~95 mph
+    let speedAdj = 0;
     if (speed < 85) {
-      baseMPF += 100;
+      speedAdj = 100;
     } else if (speed < 95) {
-      baseMPF += 50;
+      speedAdj = 50;
     } else if (speed > 105) {
-      baseMPF -= 50;
+      speedAdj = -50;
+    }
+    if (speedAdj !== 0) {
+      adjustments += speedAdj;
+      breakdown.push({
+        label: "Swing Speed",
+        value: speedAdj,
+        description: speed < 95 ? "Slower swing benefits from more forgiveness" : "Faster swing allows less forgiving clubs"
+      });
     }
 
     // Adjust for play style
+    let styleAdj = 0;
     if (playStyle === "conservative") {
-      baseMPF += 50;
+      styleAdj = 50;
     } else if (playStyle === "aggressive") {
-      baseMPF -= 30;
+      styleAdj = -30;
+    }
+    if (styleAdj !== 0) {
+      adjustments += styleAdj;
+      breakdown.push({
+        label: "Play Style",
+        value: styleAdj,
+        description: playStyle === "conservative" ? "Conservative players benefit from forgiveness" : "Aggressive players can handle less forgiving clubs"
+      });
     }
 
-    // Adjust for distance efficiency (expected distance vs actual)
-    const expectedDist = speed * 1.5; // rough estimate
+    // Adjust for distance efficiency
+    const expectedDist = speed * 1.5;
+    let distAdj = 0;
     if (dist < expectedDist * 0.85) {
-      baseMPF += 50; // needs more forgiveness
+      distAdj = 50;
+      adjustments += distAdj;
+      breakdown.push({
+        label: "Distance Efficiency",
+        value: distAdj,
+        description: "Below expected distance suggests need for more forgiveness"
+      });
     }
 
-    // Adjust for ball flight tendency (slice/hook indicates need for more forgiveness)
+    // Adjust for ball flight tendency
+    let flightAdj = 0;
+    let flightDesc = "";
     if (ballFlightTendency === "slice") {
-      baseMPF += 75; // slicers benefit from draw-biased, forgiving clubs
+      flightAdj = 75;
+      flightDesc = "Slice tendency benefits from draw-biased, forgiving clubs";
     } else if (ballFlightTendency === "hook") {
-      baseMPF += 50; // hookers need some forgiveness but less than slicers
+      flightAdj = 50;
+      flightDesc = "Hook tendency needs some correction assistance";
     } else if (ballFlightTendency === "draw") {
-      baseMPF -= 20; // controlled draw indicates better ball striking
+      flightAdj = -20;
+      flightDesc = "Controlled draw indicates solid ball striking";
+    }
+    if (flightAdj !== 0) {
+      adjustments += flightAdj;
+      breakdown.push({
+        label: "Ball Flight",
+        value: flightAdj,
+        description: flightDesc
+      });
     }
 
     // Adjust for hand grip issues
+    let gripAdj = 0;
+    let gripDesc = "";
     if (handgripIssues === "arthritis") {
-      baseMPF += 100; // needs lightweight, forgiving clubs with larger grips
+      gripAdj = 100;
+      gripDesc = "Arthritis requires lightweight, forgiving clubs";
     } else if (handgripIssues === "weak_grip") {
-      baseMPF += 75; // needs lighter swing weight and more forgiveness
+      gripAdj = 75;
+      gripDesc = "Weak grip benefits from lighter swing weight";
     } else if (handgripIssues === "other") {
-      baseMPF += 50;
+      gripAdj = 50;
+      gripDesc = "Grip issues suggest need for more forgiveness";
+    }
+    if (gripAdj !== 0) {
+      adjustments += gripAdj;
+      breakdown.push({
+        label: "Grip Issues",
+        value: gripAdj,
+        description: gripDesc
+      });
     }
 
-    // Adjust for gender (women typically benefit from more forgiveness and lighter clubs)
+    // Adjust for gender
     if (gender === "female") {
-      baseMPF += 50;
+      adjustments += 50;
+      breakdown.push({
+        label: "Gender",
+        value: 50,
+        description: "Women typically benefit from more forgiving, lighter clubs"
+      });
     }
 
-    // Adjust for hand size (affects feel and control)
+    // Adjust for hand size
+    let handAdj = 0;
     if (handSize === "small") {
-      baseMPF += 25; // smaller hands may benefit from more forgiveness
+      handAdj = 25;
     } else if (handSize === "large") {
-      baseMPF -= 15; // larger hands often have better club control
+      handAdj = -15;
+    }
+    if (handAdj !== 0) {
+      adjustments += handAdj;
+      breakdown.push({
+        label: "Hand Size",
+        value: handAdj,
+        description: handSize === "small" ? "Smaller hands benefit from more forgiveness" : "Larger hands provide better club control"
+      });
     }
 
-    // Clamp to valid MPF range (250-1000)
-    const factor = Math.max(250, Math.min(1000, Math.round(baseMPF)));
+    // Calculate final factor
+    const rawFactor = handicapBase + adjustments;
+    const factor = Math.max(250, Math.min(1000, Math.round(rawFactor)));
+
+    // Add total adjustments to breakdown if any
+    if (adjustments !== 0) {
+      breakdown.push({
+        label: "Total Adjustments",
+        value: adjustments,
+        description: `Combined effect of all factors`
+      });
+    }
 
     // Calculate club length adjustment based on height and wrist-to-floor
-    // Standard is 70" height with 34" wrist-to-floor
     const heightDiff = height - 70;
     const wristDiff = wrist - 34;
     let lengthAdjustment = "";
@@ -185,7 +274,7 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
       recommendations.push("Undersize grips recommended");
     }
 
-    return { factor, category, recommendations };
+    return { factor, category, recommendations, breakdown };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
