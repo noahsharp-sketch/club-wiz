@@ -5,7 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calculator } from "lucide-react";
+import sliceImg from "../assets/slice.jpeg";
+import straightImg from "../assets/straight.jpeg";
+import drawImg from "../assets/draw.jpeg";
+import hookImg from "../assets/hook.jpeg";
 import emailjs from "@emailjs/browser";
+
 // Hover image tooltip
 const InfoHoverImage = ({ image, label }: { image: string; label?: string }) => {
   return (
@@ -264,11 +269,20 @@ export const ClubFinderForm = ({ onCalculate }: ClubFinderFormProps) => {
                   <SelectContent>
                     <SelectItem value="slice">
                       Slice
-                      <InfoHoverImage image="/assets/slice.jpeg" label="Typical slice shape" />
+                      <InfoHoverImage image={sliceImg} label="Typical slice shape" />
                       </SelectItem>
-                    <SelectItem value="straight">Straight</SelectItem>
-                    <SelectItem value="draw">Draw</SelectItem>
-                    <SelectItem value="hook">Hook</SelectItem>
+                    <SelectItem value="straight">
+                      Straight
+                      <InfoHoverImage image={straightImg} label="Straight ball flight" />
+                      </SelectItem>
+                    <SelectItem value="draw">
+                      Draw
+                      <InfoHoverImage image={drawImg} label="Draw ball flight" />
+                      </SelectItem>
+                    <SelectItem value="hook">
+                      Hook
+                      <InfoHoverImage image={hookImg} label="Hook ball flight" />
+                      </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
